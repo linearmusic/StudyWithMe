@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSocket } from '../contexts/SocketContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { 
   HiUserAdd, 
   HiClipboardCopy, 
@@ -17,6 +18,7 @@ import toast from 'react-hot-toast'
 const Friends = () => {
   const { user, updateUser } = useAuth()
   const { onlineFriends, friendsStudyStatus } = useSocket()
+  const { isDark } = useTheme()
   const [inviteCode, setInviteCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [friends, setFriends] = useState([])
@@ -93,10 +95,16 @@ const Friends = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen transition-colors ${
+      isDark ? 'bg-gray-900' : 'bg-gray-50'
+    }`}>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Friends</h1>
-        <p className="text-gray-600 mt-2">
+        <h1 className={`text-3xl font-bold transition-colors ${
+          isDark ? 'text-white' : 'text-gray-900'
+        }`}>Friends</h1>
+        <p className={`mt-2 transition-colors ${
+          isDark ? 'text-gray-400' : 'text-gray-600'
+        }`}>
           Connect with your study buddies and track progress together
         </p>
       </div>
@@ -104,14 +112,20 @@ const Friends = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Add Friend Section */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className={`rounded-lg shadow-md p-6 mb-6 transition-colors ${
+            isDark ? 'bg-gray-800' : 'bg-white'
+          }`}>
+            <h2 className={`text-lg font-semibold mb-4 transition-colors ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
               Add Friend
             </h2>
             
             <form onSubmit={handleAddFriend} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium mb-2 transition-colors ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Friend's Invite Code
                 </label>
                 <input
@@ -119,7 +133,11 @@ const Friends = () => {
                   value={inviteCode}
                   onChange={(e) => setInviteCode(e.target.value)}
                   placeholder="Enter invite code"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase transition-colors ${
+                    isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                  }`}
                   maxLength={8}
                 />
               </div>
@@ -136,23 +154,35 @@ const Friends = () => {
           </div>
 
           {/* Your Invite Code */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className={`rounded-lg shadow-md p-6 transition-colors ${
+            isDark ? 'bg-gray-800' : 'bg-white'
+          }`}>
+            <h2 className={`text-lg font-semibold mb-4 transition-colors ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
               Your Invite Code
             </h2>
             
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className={`text-sm mb-2 transition-colors ${
+                  isDark ? 'text-gray-400' : 'text-gray-600'
+                }`}>
                   Share this code with friends to connect:
                 </p>
                 <div className="flex items-center space-x-2">
-                  <code className="bg-gray-100 px-3 py-2 rounded text-lg font-mono font-bold text-blue-600 flex-1 text-center">
+                  <code className={`px-3 py-2 rounded text-lg font-mono font-bold text-blue-600 flex-1 text-center transition-colors ${
+                    isDark ? 'bg-gray-700' : 'bg-gray-100'
+                  }`}>
                     {user?.friendInviteCode}
                   </code>
                   <button
                     onClick={copyInviteCode}
-                    className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
+                    className={`p-2 transition-colors ${
+                      isDark 
+                        ? 'text-gray-400 hover:text-blue-400' 
+                        : 'text-gray-600 hover:text-blue-600'
+                    }`}
                     title="Copy code"
                   >
                     <HiClipboardCopy className="w-4 h-4" />
@@ -160,13 +190,21 @@ const Friends = () => {
                 </div>
               </div>
 
-              <div className="border-t pt-4">
-                <p className="text-sm text-gray-600 mb-2">
+              <div className={`border-t pt-4 transition-colors ${
+                isDark ? 'border-gray-700' : 'border-gray-200'
+              }`}>
+                <p className={`text-sm mb-2 transition-colors ${
+                  isDark ? 'text-gray-400' : 'text-gray-600'
+                }`}>
                   Or share this direct link:
                 </p>
                 <button
                   onClick={copyInviteLink}
-                  className="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
+                  className={`w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-colors ${
+                    isDark 
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
                 >
                   <HiExternalLink className="w-4 h-4" />
                   <span>Copy Invite Link</span>
@@ -178,16 +216,24 @@ const Friends = () => {
 
         {/* Friends List */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+          <div className={`rounded-lg shadow-md transition-colors ${
+            isDark ? 'bg-gray-800' : 'bg-white'
+          }`}>
+            <div className={`px-6 py-4 border-b transition-colors ${
+              isDark ? 'border-gray-700' : 'border-gray-200'
+            }`}>
+              <h2 className={`text-lg font-semibold flex items-center transition-colors ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
                 <HiUsers className="w-5 h-5 mr-2" />
                 Your Friends ({friends.length})
               </h2>
             </div>
 
             {friends.length > 0 ? (
-              <div className="divide-y divide-gray-200">
+              <div className={`divide-y transition-colors ${
+                isDark ? 'divide-gray-700' : 'divide-gray-200'
+              }`}>
                 {friends.map((friend) => {
                   const friendId = friend.id || friend._id
                   const isOnline = onlineFriends.includes(friendId)
@@ -204,20 +250,28 @@ const Friends = () => {
                               </span>
                             </div>
                             {isOnline && (
-                              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                              <div className={`absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 ${
+                                isDark ? 'border-gray-800' : 'border-white'
+                              }`}></div>
                             )}
                           </div>
 
                           <div>
-                            <h3 className="text-lg font-medium text-gray-900">
+                            <h3 className={`text-lg font-medium transition-colors ${
+                              isDark ? 'text-white' : 'text-gray-900'
+                            }`}>
                               {friend.username}
                             </h3>
                             <div className="flex items-center space-x-4 mt-1">
-                              <div className="flex items-center text-sm text-gray-600">
+                              <div className={`flex items-center text-sm transition-colors ${
+                                isDark ? 'text-gray-400' : 'text-gray-600'
+                              }`}>
                                 <HiClock className="w-4 h-4 mr-1" />
                                 <span>{formatDuration(friend.totalStudyTime || 0)}</span>
                               </div>
-                              <div className="flex items-center text-sm text-gray-600">
+                              <div className={`flex items-center text-sm transition-colors ${
+                                isDark ? 'text-gray-400' : 'text-gray-600'
+                              }`}>
                                 <HiTrendingUp className="w-4 h-4 mr-1" />
                                 <span>{formatDuration(friend.weeklyStudyTime || 0)} this week</span>
                               </div>
@@ -244,7 +298,11 @@ const Friends = () => {
                           
                           <button
                             onClick={() => handleRemoveFriend(friendId, friend.username)}
-                            className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                            className={`p-1 transition-colors ${
+                              isDark 
+                                ? 'text-gray-400 hover:text-red-400' 
+                                : 'text-gray-400 hover:text-red-600'
+                            }`}
                             title="Remove friend"
                           >
                             <HiTrash className="w-4 h-4" />
@@ -257,11 +315,17 @@ const Friends = () => {
               </div>
             ) : (
               <div className="p-12 text-center">
-                <HiUsers className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <HiUsers className={`w-16 h-16 mx-auto mb-4 transition-colors ${
+                  isDark ? 'text-gray-600' : 'text-gray-300'
+                }`} />
+                <h3 className={`text-lg font-medium mb-2 transition-colors ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>
                   No friends yet
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className={`mb-6 transition-colors ${
+                  isDark ? 'text-gray-400' : 'text-gray-600'
+                }`}>
                   Share your invite code or add friends using their codes to get started!
                 </p>
               </div>

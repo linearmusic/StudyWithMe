@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { 
   HiCalendar, 
   HiClock, 
@@ -15,6 +16,7 @@ import toast from 'react-hot-toast'
 
 const Schedule = () => {
   const { user, updateUser } = useAuth()
+  const { isDark } = useTheme()
   const [schedules, setSchedules] = useState([])
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingSchedule, setEditingSchedule] = useState(null)
@@ -216,11 +218,17 @@ const Schedule = () => {
   }, {})
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-colors ${
+      isDark ? 'bg-gray-900' : 'bg-gray-50'
+    } min-h-screen`}>
       <div className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Study Schedule</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className={`text-3xl font-bold transition-colors ${
+            isDark ? 'text-white' : 'text-gray-900'
+          }`}>Study Schedule</h1>
+          <p className={`mt-2 transition-colors ${
+            isDark ? 'text-gray-400' : 'text-gray-600'
+          }`}>
             Plan your study sessions and track your progress
           </p>
         </div>
@@ -240,9 +248,17 @@ const Schedule = () => {
           Object.entries(groupedSchedules)
             .sort(([a], [b]) => new Date(a) - new Date(b))
             .map(([date, daySchedules]) => (
-              <div key={date} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="bg-gray-50 px-6 py-3 border-b">
-                  <h2 className="text-lg font-semibold text-gray-900">
+              <div key={date} className={`rounded-lg shadow-md overflow-hidden transition-colors ${
+                isDark ? 'bg-gray-800' : 'bg-white'
+              }`}>
+                <div className={`px-6 py-3 border-b transition-colors ${
+                  isDark 
+                    ? 'bg-gray-700 border-gray-600' 
+                    : 'bg-gray-50 border-gray-200'
+                }`}>
+                  <h2 className={`text-lg font-semibold transition-colors ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}>
                     {new Date(date).toLocaleDateString('en-US', {
                       weekday: 'long',
                       year: 'numeric',
@@ -252,7 +268,9 @@ const Schedule = () => {
                   </h2>
                 </div>
 
-                <div className="divide-y divide-gray-200">
+                <div className={`divide-y transition-colors ${
+                  isDark ? 'divide-gray-700' : 'divide-gray-200'
+                }`}>
                   {daySchedules
                     .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
                     .map((schedule) => {
@@ -264,7 +282,9 @@ const Schedule = () => {
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="flex items-center space-x-3 mb-2">
-                                <h3 className="text-lg font-medium text-gray-900">
+                                <h3 className={`text-lg font-medium transition-colors ${
+                                  isDark ? 'text-white' : 'text-gray-900'
+                                }`}>
                                   {schedule.title}
                                 </h3>
                                 {schedule.completed && (
@@ -272,9 +292,13 @@ const Schedule = () => {
                                 )}
                               </div>
 
-                              <p className="text-gray-600 mb-3">{schedule.subject}</p>
+                              <p className={`mb-3 transition-colors ${
+                                isDark ? 'text-gray-400' : 'text-gray-600'
+                              }`}>{schedule.subject}</p>
 
-                              <div className="flex items-center space-x-6 text-sm text-gray-500 mb-4">
+                              <div className={`flex items-center space-x-6 text-sm mb-4 transition-colors ${
+                                isDark ? 'text-gray-400' : 'text-gray-500'
+                              }`}>
                                 <div className="flex items-center">
                                   <HiClock className="w-4 h-4 mr-1" />
                                   <span>
@@ -314,10 +338,16 @@ const Schedule = () => {
                               {/* Progress Bar */}
                               <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
-                                  <span className="text-gray-600">Progress</span>
-                                  <span className="text-gray-900 font-medium">{progress}%</span>
+                                  <span className={`transition-colors ${
+                                    isDark ? 'text-gray-400' : 'text-gray-600'
+                                  }`}>Progress</span>
+                                  <span className={`font-medium transition-colors ${
+                                    isDark ? 'text-white' : 'text-gray-900'
+                                  }`}>{progress}%</span>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className={`w-full rounded-full h-2 transition-colors ${
+                                  isDark ? 'bg-gray-700' : 'bg-gray-200'
+                                }`}>
                                   <div
                                     className={`h-2 rounded-full transition-all ${
                                       schedule.completed 
@@ -333,7 +363,9 @@ const Schedule = () => {
 
                               {schedule.completedSessions && schedule.completedSessions.length > 0 && (
                                 <div className="mt-3">
-                                  <p className="text-sm text-gray-600">
+                                  <p className={`text-sm transition-colors ${
+                                    isDark ? 'text-gray-400' : 'text-gray-600'
+                                  }`}>
                                     Completed {schedule.completedSessions.length} session(s) • 
                                     Total: {formatDuration(
                                       schedule.completedSessions.reduce((total, session) => total + session.duration, 0)
@@ -385,12 +417,20 @@ const Schedule = () => {
               </div>
             ))
         ) : (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <HiCalendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <div className={`rounded-lg shadow-md p-12 text-center transition-colors ${
+            isDark ? 'bg-gray-800' : 'bg-white'
+          }`}>
+            <HiCalendar className={`w-16 h-16 mx-auto mb-4 transition-colors ${
+              isDark ? 'text-gray-600' : 'text-gray-300'
+            }`} />
+            <h3 className={`text-lg font-medium mb-2 transition-colors ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
               No schedules yet
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className={`mb-6 transition-colors ${
+              isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}>
               Create your first study schedule to start tracking your progress!
             </p>
             <button
@@ -407,9 +447,13 @@ const Schedule = () => {
       {/* Add/Edit Schedule Modal */}
       {(showAddModal || editingSchedule) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className={`rounded-lg max-w-md w-full p-6 transition-colors ${
+            isDark ? 'bg-gray-800' : 'bg-white'
+          }`}>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className={`text-xl font-semibold transition-colors ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
                 {editingSchedule ? 'Edit Schedule' : 'Add New Schedule'}
               </h2>
               <button
@@ -418,7 +462,9 @@ const Schedule = () => {
                   setEditingSchedule(null)
                   resetForm()
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                className={`transition-colors ${
+                  isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+                }`}
               >
                 <HiX className="w-6 h-6" />
               </button>
@@ -426,35 +472,49 @@ const Schedule = () => {
 
             <form onSubmit={editingSchedule ? handleEditSchedule : handleAddSchedule} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium mb-1 transition-colors ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Title
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                    isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                  }`}
                   placeholder="e.g., Math Study Session"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium mb-1 transition-colors ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Subject
                 </label>
                 <input
                   type="text"
                   value={formData.subject}
                   onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                    isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                  }`}
                   placeholder="e.g., Calculus"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium mb-1 transition-colors ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Start Date & Time
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -462,21 +522,31 @@ const Schedule = () => {
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className={`px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm transition-colors ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
                     required
                   />
                   <input
                     type="time"
                     value={formData.startTime}
                     onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className={`px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm transition-colors ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium mb-1 transition-colors ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   End Date & Time
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -484,27 +554,41 @@ const Schedule = () => {
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className={`px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm transition-colors ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
                     required
                   />
                   <input
                     type="time"
                     value={formData.endTime}
                     onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className={`px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm transition-colors ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium mb-1 transition-colors ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Recurring
                 </label>
                 <select
                   value={formData.recurring}
                   onChange={(e) => setFormData({ ...formData, recurring: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                    isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  }`}
                 >
                   <option value="none">No Repeat</option>
                   <option value="daily">Daily</option>
@@ -521,7 +605,11 @@ const Schedule = () => {
                     setEditingSchedule(null)
                     resetForm()
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                  className={`flex-1 px-4 py-2 border rounded-md transition-colors ${
+                    isDark 
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
                 >
                   Cancel
                 </button>

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { HiClock, HiEye, HiEyeOff } from 'react-icons/hi'
+import { useTheme } from '../contexts/ThemeContext'
+import { HiClock, HiEye, HiEyeOff, HiSun, HiMoon } from 'react-icons/hi'
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { login } = useAuth()
+  const { isDark, toggleTheme } = useTheme()
 
   const handleChange = (e) => {
     setFormData({
@@ -33,24 +35,50 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-4 px-4 sm:px-6 lg:px-8">
+    <div className={`min-h-screen flex items-center justify-center py-4 px-4 sm:px-6 lg:px-8 transition-colors ${
+      isDark 
+        ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
+        : 'bg-gradient-to-br from-blue-50 to-indigo-100'
+    }`}>
       <div className="max-w-md w-full space-y-4">
+        {/* Theme Toggle */}
+        <div className="flex justify-end">
+          <button
+            onClick={toggleTheme}
+            className={`p-2 rounded-lg transition-colors ${
+              isDark 
+                ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700' 
+                : 'bg-white text-gray-600 hover:bg-gray-100'
+            } shadow-sm`}
+          >
+            {isDark ? <HiSun className="w-5 h-5" /> : <HiMoon className="w-5 h-5" />}
+          </button>
+        </div>
+
         <div className="text-center">
           <div className="flex justify-center">
             <HiClock className="w-10 h-10 text-blue-600" />
           </div>
-          <h2 className="mt-3 text-2xl font-extrabold text-gray-900">
+          <h2 className={`mt-3 text-2xl font-extrabold transition-colors ${
+            isDark ? 'text-white' : 'text-gray-900'
+          }`}>
             Welcome back
           </h2>
-          <p className="mt-1 text-sm text-gray-600">
+          <p className={`mt-1 text-sm transition-colors ${
+            isDark ? 'text-gray-400' : 'text-gray-600'
+          }`}>
             Sign in to continue your study journey
           </p>
         </div>
 
-        <div className="bg-white py-6 px-4 shadow-xl rounded-lg sm:px-8">
+        <div className={`py-6 px-4 shadow-xl rounded-lg sm:px-8 transition-colors ${
+          isDark ? 'bg-gray-800' : 'bg-white'
+        }`}>
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className={`block text-sm font-medium transition-colors ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>
                 Email address
               </label>
               <div className="mt-1">
@@ -62,14 +90,20 @@ const Login = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className={`appearance-none block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${
+                    isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                  }`}
                   placeholder="Enter your email"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className={`block text-sm font-medium transition-colors ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>
                 Password
               </label>
               <div className="mt-1 relative">
@@ -81,7 +115,11 @@ const Login = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className={`appearance-none block w-full px-3 py-2 pr-10 border rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${
+                    isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                  }`}
                   placeholder="Enter your password"
                 />
                 <button
@@ -90,9 +128,9 @@ const Login = () => {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <HiEyeOff className="h-5 w-5 text-gray-400" />
+                    <HiEyeOff className={`h-5 w-5 ${isDark ? 'text-gray-400' : 'text-gray-400'}`} />
                   ) : (
-                    <HiEye className="h-5 w-5 text-gray-400" />
+                    <HiEye className={`h-5 w-5 ${isDark ? 'text-gray-400' : 'text-gray-400'}`} />
                   )}
                 </button>
               </div>
@@ -113,7 +151,9 @@ const Login = () => {
             </div>
 
             <div className="text-center">
-              <span className="text-sm text-gray-600">
+              <span className={`text-sm transition-colors ${
+                isDark ? 'text-gray-400' : 'text-gray-600'
+              }`}>
                 Don't have an account?{' '}
                 <Link
                   to="/register"
@@ -126,7 +166,9 @@ const Login = () => {
           </form>
         </div>
 
-        <div className="text-center text-xs text-gray-500 mt-2">
+        <div className={`text-center text-xs mt-2 transition-colors ${
+          isDark ? 'text-gray-500' : 'text-gray-500'
+        }`}>
           <p>StudyTogether - Make studying social and productive</p>
         </div>
       </div>
