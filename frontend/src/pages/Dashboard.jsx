@@ -88,7 +88,34 @@ const Dashboard = () => {
     }
 
     return () => clearInterval(pomodoroInterval.current)
-  }, [isPomodoroMode, isStudying, isPomodoroPaused, handlePomodoroComplete])
+  }, [isPomodoroMode, isStudying, isPomodoroPaused])
+
+  const handlePomodoroComplete = useCallback(() => {
+    if (pomodoroState === 'work') {
+      // Work session complete, start break
+      setPomodoroState('break')
+      setPomodoroTimeLeft(5 * 60) // 5 minute break
+      toast.success('🍅 Work session complete! Time for a break!')
+      
+      // Browser notification
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        new Notification('Pomodoro Complete', { 
+          body: 'Work session finished! Take a 5-minute break.' 
+        })
+      }
+    } else {
+      // Break complete, start new work session
+      setPomodoroState('work')
+      setPomodoroTimeLeft(25 * 60) // 25 minute work
+      toast.success('✨ Break over! Ready for another study session?')
+      
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        new Notification('Break Complete', { 
+          body: 'Break finished! Time to study.' 
+        })
+      }
+    }
+  }, [pomodoroState])
 
   const fetchQuickStats = async () => {
     try {
@@ -126,33 +153,6 @@ const Dashboard = () => {
       console.error('Error fetching schedules:', error)
     }
   }
-
-  const handlePomodoroComplete = useCallback(() => {
-    if (pomodoroState === 'work') {
-      // Work session complete, start break
-      setPomodoroState('break')
-      setPomodoroTimeLeft(5 * 60) // 5 minute break
-      toast.success('🍅 Work session complete! Time for a break!')
-      
-      // Browser notification
-      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        new Notification('Pomodoro Complete', { 
-          body: 'Work session finished! Take a 5-minute break.' 
-        })
-      }
-    } else {
-      // Break complete, start new work session
-      setPomodoroState('work')
-      setPomodoroTimeLeft(25 * 60) // 25 minute work
-      toast.success('✨ Break over! Ready for another study session?')
-      
-      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        new Notification('Break Complete', { 
-          body: 'Break finished! Time to study.' 
-        })
-      }
-    }
-  }, [pomodoroState])
 
   const togglePomodoroMode = () => {
     setIsPomodoroMode(!isPomodoroMode)
