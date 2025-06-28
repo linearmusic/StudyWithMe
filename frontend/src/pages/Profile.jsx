@@ -54,11 +54,13 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className={`max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen transition-colors ${
+      <div className={`min-h-screen transition-colors ${
         isDark ? 'bg-gray-900' : 'bg-gray-50'
       }`}>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
         </div>
       </div>
     )
@@ -66,28 +68,31 @@ const Profile = () => {
 
   if (!profileUser) {
     return (
-      <div className={`max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen transition-colors ${
+      <div className={`min-h-screen transition-colors ${
         isDark ? 'bg-gray-900' : 'bg-gray-50'
       }`}>
-        <div className="text-center py-12">
-          <HiUser className={`w-16 h-16 mx-auto mb-4 transition-colors ${
-            isDark ? 'text-gray-600' : 'text-gray-300'
-          }`} />
-          <h3 className={`text-lg font-medium mb-2 transition-colors ${
-            isDark ? 'text-white' : 'text-gray-900'
-          }`}>User not found</h3>
-          <p className={`transition-colors ${
-            isDark ? 'text-gray-400' : 'text-gray-600'
-          }`}>The user profile you're looking for doesn't exist.</p>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <HiUser className={`w-16 h-16 mx-auto mb-4 transition-colors ${
+              isDark ? 'text-gray-600' : 'text-gray-300'
+            }`} />
+            <h3 className={`text-lg font-medium mb-2 transition-colors ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>User not found</h3>
+            <p className={`transition-colors ${
+              isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}>The user profile you're looking for doesn't exist.</p>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className={`max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen transition-colors ${
+    <div className={`min-h-screen transition-colors ${
       isDark ? 'bg-gray-900' : 'bg-gray-50'
     }`}>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Profile Header */}
       <div className={`rounded-lg shadow-md overflow-hidden mb-8 transition-colors ${
         isDark ? 'bg-gray-800' : 'bg-white'
@@ -311,6 +316,7 @@ const Profile = () => {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )
