@@ -80,11 +80,22 @@ const Dashboard = () => {
   useEffect(() => {
     let interval = null
     if (isStudying && studySession && !isPomodoroMode) {
+      console.log('Starting regular timer', { isStudying, studySession, isPomodoroMode })
       interval = setInterval(() => {
-        setElapsedTime(Date.now() - studySession.startTime.getTime())
+        const startTime = new Date(studySession.startTime)
+        const elapsed = Date.now() - startTime.getTime()
+        setElapsedTime(elapsed)
       }, 1000)
+    } else {
+      console.log('Timer conditions not met', { isStudying, studySession: !!studySession, isPomodoroMode })
     }
-    return () => clearInterval(interval)
+    
+    return () => {
+      if (interval) {
+        console.log('Clearing regular timer interval')
+        clearInterval(interval)
+      }
+    }
   }, [isStudying, studySession, isPomodoroMode])
 
   const handlePomodoroComplete = useCallback(() => {
@@ -121,6 +132,7 @@ const Dashboard = () => {
   // Pomodoro timer effect
   useEffect(() => {
     if (isPomodoroMode && isStudying && !isPomodoroPaused) {
+      console.log('Starting Pomodoro timer', { isPomodoroMode, isStudying, isPomodoroPaused })
       pomodoroInterval.current = setInterval(() => {
         setPomodoroTimeLeft(prev => {
           if (prev <= 1) {
@@ -132,10 +144,16 @@ const Dashboard = () => {
         setElapsedTime(prev => prev + 1000)
       }, 1000)
     } else {
+      console.log('Pomodoro timer conditions not met', { isPomodoroMode, isStudying, isPomodoroPaused })
       clearInterval(pomodoroInterval.current)
     }
 
-    return () => clearInterval(pomodoroInterval.current)
+    return () => {
+      if (pomodoroInterval.current) {
+        console.log('Clearing Pomodoro timer interval')
+        clearInterval(pomodoroInterval.current)
+      }
+    }
   }, [isPomodoroMode, isStudying, isPomodoroPaused, handlePomodoroComplete])
 
   const fetchQuickStats = async () => {
@@ -215,6 +233,8 @@ const Dashboard = () => {
         startTime: new Date()
       }
 
+      console.log('Starting study session:', sessionData)
+      
       setStudySession(sessionData)
       setIsStudying(true)
       setElapsedTime(0)
@@ -222,6 +242,7 @@ const Dashboard = () => {
       if (isPomodoroMode) {
         setPomodoroTimeLeft(pomodoroSettings.workDuration * 60)
         setPomodoroState('work')
+        setIsPomodoroPaused(false)
       }
       
       startStudySession(subject || 'General Study')
@@ -236,16 +257,27 @@ const Dashboard = () => {
     if (!studySession) return
 
     try {
+      console.log('Stopping study session:', studySession)
+      
       const response = await axios.post('/study/session/stop', {
         startTime: studySession.startTime,
         subject: subject || 'General Study'
       })
+
+      console.log('Study session stopped successfully')
 
       setIsStudying(false)
       setStudySession(null)
       setElapsedTime(0)
       setSubject('')
       setIsPomodoroPaused(false)
+      
+      // Reset Pomodoro state
+      if (isPomodoroMode) {
+        setPomodoroState('work')
+        setPomodoroTimeLeft(pomodoroSettings.workDuration * 60)
+        setPomodoroSessionCount(0)
+      }
 
       updateUser(response.data.stats)
       
