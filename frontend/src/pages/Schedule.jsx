@@ -121,7 +121,7 @@ const Schedule = () => {
       title: schedule.title,
       subject: schedule.subject,
       startTime: new Date(schedule.startTime).toISOString().slice(0, 16),
-      endTime: new Date(schedule.endTime).toISOString().slice(0, 16),
+      endTime: schedule.endTime ? new Date(schedule.endTime).toISOString().slice(0, 16) : '',
       recurring: schedule.recurring
     })
   }
@@ -129,6 +129,11 @@ const Schedule = () => {
   const getScheduleProgress = (schedule) => {
     if (!schedule.completedSessions || schedule.completedSessions.length === 0) {
       return 0
+    }
+
+    // If no end time, progress is based on completed sessions (100% when at least one session)
+    if (!schedule.endTime) {
+      return schedule.completedSessions.length > 0 ? 100 : 0
     }
 
     const totalPlannedDuration = new Date(schedule.endTime).getTime() - new Date(schedule.startTime).getTime()
@@ -150,6 +155,7 @@ const Schedule = () => {
   }
 
   const getScheduleDuration = (schedule) => {
+    if (!schedule.endTime) return 0
     return new Date(schedule.endTime).getTime() - new Date(schedule.startTime).getTime()
   }
 
@@ -229,17 +235,22 @@ const Schedule = () => {
                                     {new Date(schedule.startTime).toLocaleTimeString([], {
                                       hour: '2-digit',
                                       minute: '2-digit'
-                                    })} - {new Date(schedule.endTime).toLocaleTimeString([], {
-                                      hour: '2-digit',
-                                      minute: '2-digit'
                                     })}
+                                    {schedule.endTime && (
+                                      ` - ${new Date(schedule.endTime).toLocaleTimeString([], {
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}`
+                                    )}
                                   </span>
                                 </div>
                                 
-                                <div className="flex items-center">
-                                  <HiCalendar className="w-4 h-4 mr-1" />
-                                  <span>{formatDuration(duration)}</span>
-                                </div>
+                                {duration > 0 && (
+                                  <div className="flex items-center">
+                                    <HiCalendar className="w-4 h-4 mr-1" />
+                                    <span>{formatDuration(duration)}</span>
+                                  </div>
+                                )}
 
                                 {schedule.recurring !== 'none' && (
                                   <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
@@ -388,14 +399,13 @@ const Schedule = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  End Time
+                  End Time <span className="text-gray-500 font-normal">(optional)</span>
                 </label>
                 <input
                   type="datetime-local"
                   value={formData.endTime}
                   onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
                 />
               </div>
 
