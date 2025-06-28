@@ -35,9 +35,35 @@ router.post('/session/stop', authenticateToken, async (req, res) => {
     const { startTime, subject, scheduleId, notes } = req.body;
     const userId = req.user._id;
 
+    // Validate required fields
+    if (!startTime) {
+      return res.status(400).json({ message: 'Start time is required' });
+    }
+
+    // Validate and parse dates
     const endTime = new Date();
     const startTimeDate = new Date(startTime);
+    
+    // Check if startTime is valid
+    if (isNaN(startTimeDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid start time format' });
+    }
+
+    // Check if session makes sense (not in future, not more than 24 hours)
+    if (startTimeDate > endTime) {
+      return res.status(400).json({ message: 'Start time cannot be in the future' });
+    }
+
     const duration = endTime.getTime() - startTimeDate.getTime();
+    
+    // Validate session duration (at least 1 second, max 24 hours)
+    if (duration < 1000) {
+      return res.status(400).json({ message: 'Session too short (minimum 1 second)' });
+    }
+
+    if (duration > 24 * 60 * 60 * 1000) {
+      return res.status(400).json({ message: 'Session too long (maximum 24 hours)' });
+    }
 
     const sessionData = {
       startTime: startTimeDate,
@@ -47,49 +73,77 @@ router.post('/session/stop', authenticateToken, async (req, res) => {
       notes: notes || ''
     };
 
-    // Add session to user
+    // Find user and validate
     const user = await User.findById(userId);
-    const newAchievements = user.addStudySession(sessionData);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Add session to user with error handling
+    let newAchievements = [];
+    try {
+      newAchievements = user.addStudySession(sessionData);
+    } catch (sessionError) {
+      console.error('Error adding study session:', sessionError);
+      return res.status(500).json({ message: 'Failed to record study session' });
+    }
 
     // If this was for a scheduled study, mark progress
     if (scheduleId) {
-      const schedule = user.studySchedules.id(scheduleId);
-      if (schedule) {
-        schedule.completedSessions.push({
-          date: new Date(),
-          duration,
-          actualStartTime: sessionData.startTime,
-          actualEndTime: sessionData.endTime
-        });
+      try {
+        const schedule = user.studySchedules.id(scheduleId);
+        if (schedule) {
+          schedule.completedSessions.push({
+            date: new Date(),
+            duration,
+            actualStartTime: sessionData.startTime,
+            actualEndTime: sessionData.endTime
+          });
 
-        // Check if schedule target is met
-        const totalScheduleDuration = schedule.completedSessions.reduce(
-          (total, session) => total + session.duration, 0
-        );
-        const plannedDuration = schedule.endTime.getTime() - schedule.startTime.getTime();
-        
-        if (totalScheduleDuration >= plannedDuration) {
-          schedule.completed = true;
+          // Check if schedule target is met
+          const totalScheduleDuration = schedule.completedSessions.reduce(
+            (total, session) => total + (session.duration || 0), 0
+          );
+          const plannedDuration = schedule.endTime.getTime() - schedule.startTime.getTime();
+          
+          if (totalScheduleDuration >= plannedDuration) {
+            schedule.completed = true;
+          }
         }
+      } catch (scheduleError) {
+        console.error('Error updating schedule progress:', scheduleError);
+        // Continue without failing - schedule update is not critical
       }
     }
 
-    await user.save();
+    // Save user data
+    try {
+      await user.save();
+    } catch (saveError) {
+      console.error('Error saving user data:', saveError);
+      return res.status(500).json({ message: 'Failed to save session data' });
+    }
 
-    // Send achievement email notifications
+    // Send achievement email notifications (non-blocking)
     if (newAchievements && newAchievements.length > 0) {
-      try {
-        for (const achievement of newAchievements) {
-          await emailService.sendAchievementNotification(
-            user.email,
-            achievement,
-            user.username
-          );
+      // Run email notifications asynchronously without blocking response
+      setImmediate(async () => {
+        try {
+          for (const achievement of newAchievements) {
+            try {
+              await emailService.sendAchievementNotification(
+                user.email,
+                achievement,
+                user.username
+              );
+            } catch (emailError) {
+              console.error(`Failed to send email for achievement ${achievement}:`, emailError);
+            }
+          }
+        } catch (emailBatchError) {
+          console.error('Failed to send achievement notifications:', emailBatchError);
         }
-      } catch (emailError) {
-        console.error('Failed to send achievement notifications:', emailError);
-        // Continue without failing the request
-      }
+      });
     }
 
     // Calculate today's progress for daily goal
@@ -99,25 +153,36 @@ router.post('/session/stop', authenticateToken, async (req, res) => {
     tomorrow.setDate(tomorrow.getDate() + 1);
     
     const todayStudyTime = user.studySessions
-      .filter(session => session.startTime >= today && session.startTime < tomorrow)
-      .reduce((total, session) => total + session.duration, 0);
+      .filter(session => {
+        try {
+          return session.startTime && session.startTime >= today && session.startTime < tomorrow;
+        } catch (filterError) {
+          console.error('Error filtering today sessions:', filterError);
+          return false;
+        }
+      })
+      .reduce((total, session) => total + (session.duration || 0), 0);
 
     res.json({
       message: 'Study session completed',
       session: sessionData,
-      newAchievements,
+      newAchievements: newAchievements || [],
       stats: {
-        totalStudyTime: user.totalStudyTime,
-        weeklyStudyTime: user.weeklyStudyTime,
-        monthlyStudyTime: user.monthlyStudyTime,
-        currentStreak: user.currentStreak,
+        totalStudyTime: user.totalStudyTime || 0,
+        weeklyStudyTime: user.weeklyStudyTime || 0,
+        monthlyStudyTime: user.monthlyStudyTime || 0,
+        currentStreak: user.currentStreak || 0,
         todayStudyTime,
-        dailyGoal: user.dailyGoal
+        dailyGoal: user.dailyGoal || 7200000
       }
     });
   } catch (error) {
     console.error('Stop session error:', error);
-    res.status(500).json({ message: 'Server error while stopping session' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      message: 'Server error while stopping session',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
   }
 });
 
