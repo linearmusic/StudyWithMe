@@ -23,7 +23,11 @@ const server = createServer(app);
 // CORS configuration for production
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL || 'https://your-frontend-url.vercel.app']
+    ? [
+        process.env.FRONTEND_URL,
+        'https://study-with-me-tau.vercel.app',
+        /\.vercel\.app$/  // Allow any vercel.app subdomain
+      ].filter(Boolean)
     : ["http://localhost:5173", "http://localhost:3000"],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
