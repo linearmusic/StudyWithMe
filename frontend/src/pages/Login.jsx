@@ -5,6 +5,12 @@ import { useTheme } from '../contexts/ThemeContext'
 import { HiClock, HiEye, HiEyeOff, HiSun, HiMoon } from 'react-icons/hi'
 import OTPVerification from '../components/OTPVerification'
 
+// API URL configuration for different environments
+const API_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.PROD 
+    ? 'https://studywithme-kztj.onrender.com/api' 
+    : 'http://localhost:3001/api')
+
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
@@ -31,7 +37,7 @@ const Login = () => {
     setError('')
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

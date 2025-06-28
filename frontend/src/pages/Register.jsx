@@ -5,6 +5,12 @@ import { useTheme } from '../contexts/ThemeContext'
 import { HiClock, HiEye, HiEyeOff, HiSun, HiMoon } from 'react-icons/hi'
 import OTPVerification from '../components/OTPVerification'
 
+// API URL configuration for different environments
+const API_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.PROD 
+    ? 'https://studywithme-kztj.onrender.com/api' 
+    : 'http://localhost:3001/api')
+
 const Register = () => {
   const [formData, setFormData] = useState({
     username: '',
@@ -69,7 +75,7 @@ const Register = () => {
     setErrors({})
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/register', {
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

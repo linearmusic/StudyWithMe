@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 
+// API URL configuration for different environments
+const API_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.PROD 
+    ? 'https://studywithme-kztj.onrender.com/api' 
+    : 'http://localhost:3001/api');
+
 const OTPVerification = ({ email, userId, onVerificationSuccess, onResendOTP }) => {
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +28,7 @@ const OTPVerification = ({ email, userId, onVerificationSuccess, onResendOTP }) 
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/verify-otp', {
+      const response = await fetch(`${API_URL}/auth/verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -55,7 +61,7 @@ const OTPVerification = ({ email, userId, onVerificationSuccess, onResendOTP }) 
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/resend-otp', {
+      const response = await fetch(`${API_URL}/auth/resend-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
