@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useSocket } from '../contexts/SocketContext'
 import { useTheme } from '../contexts/ThemeContext'
+import Avatar from '../components/Avatar'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { 
@@ -626,11 +627,7 @@ const Dashboard = () => {
                           to={`/profile/${friendId}`}
                           className="flex items-center hover:opacity-80 transition-opacity"
                         >
-                          <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs font-medium">
-                              {friend.username[0].toUpperCase()}
-                            </span>
-                          </div>
+                          <Avatar user={friend} size="sm" />
                           <span className={`ml-2 text-xs font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {friend.username}
                           </span>

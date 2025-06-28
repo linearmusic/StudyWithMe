@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
+import Avatar from '../components/Avatar'
+import ActivityHeatmap from '../components/ActivityHeatmap'
 import { 
   HiUser, 
   HiClock, 
@@ -9,7 +11,8 @@ import {
   HiTrendingUp, 
   HiBookOpen,
   HiBadgeCheck,
-  HiUsers
+  HiUsers,
+  HiCheckCircle
 } from 'react-icons/hi'
 import axios from 'axios'
 
@@ -41,6 +44,18 @@ const Profile = () => {
       setLoading(false)
     }
   }
+
+  // Calculate schedule consistency
+  const calculateScheduleConsistency = (schedules, sessions) => {
+    if (!schedules || schedules.length === 0) return 0;
+    
+    const completedSchedules = schedules.filter(schedule => 
+      schedule.completed || 
+      (schedule.completedSessions && schedule.completedSessions.length > 0)
+    );
+    
+    return Math.round((completedSchedules.length / schedules.length) * 100);
+  };
 
   const formatDuration = (milliseconds) => {
     const hours = Math.floor(milliseconds / (1000 * 60 * 60))
@@ -100,14 +115,15 @@ const Profile = () => {
         <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-32"></div>
         <div className="px-6 pb-6">
           <div className="flex items-center -mt-16 mb-4">
-            <div className={`w-24 h-24 rounded-full border-4 shadow-lg flex items-center justify-center transition-colors ${
-              isDark ? 'bg-gray-800 border-gray-800' : 'bg-white border-white'
+            <div className={`border-4 shadow-lg rounded-full transition-colors ${
+              isDark ? 'border-gray-800' : 'border-white'
             }`}>
-              <span className={`text-3xl font-bold transition-colors ${
-                isDark ? 'text-white' : 'text-gray-700'
-              }`}>
-                {profileUser.username[0].toUpperCase()}
-              </span>
+              <Avatar 
+                user={profileUser} 
+                size="xl" 
+                editable={isOwnProfile}
+                className="w-24 h-24"
+              />
             </div>
             <div className="ml-6 mt-16">
               <h1 className={`text-2xl font-bold transition-colors ${
@@ -126,15 +142,25 @@ const Profile = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Stats Overview */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Activity Heatmap */}
+          <div className={`rounded-lg shadow-md p-6 transition-colors ${
+            isDark ? 'bg-gray-800' : 'bg-white'
+          }`}>
+            <ActivityHeatmap 
+              studySessions={profileUser.recentSessions || []} 
+              className="w-full"
+            />
+          </div>
+
           {/* Study Statistics */}
           <div className={`rounded-lg shadow-md p-6 transition-colors ${
             isDark ? 'bg-gray-800' : 'bg-white'
           }`}>
             <h2 className={`text-lg font-semibold mb-6 transition-colors ${
               isDark ? 'text-white' : 'text-gray-900'
-            }`}>Study Statistics</h2>
+            }`}>Study Overview</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="text-center">
                 <HiClock className="w-8 h-8 text-blue-600 mx-auto mb-2" />
                 <div className={`text-2xl font-bold transition-colors ${
@@ -144,7 +170,7 @@ const Profile = () => {
                 </div>
                 <div className={`text-sm transition-colors ${
                   isDark ? 'text-gray-400' : 'text-gray-600'
-                }`}>Total Study Time</div>
+                }`}>Total Time</div>
               </div>
 
               <div className="text-center">
@@ -168,7 +194,19 @@ const Profile = () => {
                 </div>
                 <div className={`text-sm transition-colors ${
                   isDark ? 'text-gray-400' : 'text-gray-600'
-                }`}>Recent Sessions</div>
+                }`}>Sessions</div>
+              </div>
+
+              <div className="text-center">
+                <HiCheckCircle className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
+                <div className={`text-2xl font-bold transition-colors ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {calculateScheduleConsistency(profileUser.studySchedules || [], profileUser.recentSessions || [])}%
+                </div>
+                <div className={`text-sm transition-colors ${
+                  isDark ? 'text-gray-400' : 'text-gray-600'
+                }`}>Consistency</div>
               </div>
             </div>
           </div>

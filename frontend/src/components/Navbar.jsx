@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
+import Avatar from './Avatar'
 import { 
   HiHome, 
   HiUsers, 
@@ -12,7 +13,8 @@ import {
   HiMenu, 
   HiX,
   HiClock,
-  HiAcademicCap
+  HiAcademicCap,
+  HiStar
 } from 'react-icons/hi'
 
 const Navbar = () => {
@@ -35,6 +37,7 @@ const Navbar = () => {
     { path: '/schedule', icon: HiCalendar, label: 'Schedule' },
     { path: '/sessions', icon: HiClock, label: 'Sessions' },
     { path: '/statistics', icon: HiChartBar, label: 'Statistics' },
+    { path: '/rankings', icon: HiStar, label: 'Rankings' },
   ]
 
   return (
@@ -71,18 +74,17 @@ const Navbar = () => {
 
           {/* User Menu */}
           <div className="hidden md:flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-medium">
-                  {user?.username?.[0]?.toUpperCase()}
-                </span>
-              </div>
+            <Link 
+              to={`/profile/${user?.id}`}
+              className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+            >
+              <Avatar user={user} size="sm" />
               <span className={`text-sm font-medium transition-colors ${
-                isDark ? 'text-gray-300' : 'text-gray-700'
+                isDark ? 'text-gray-300 hover:text-blue-400' : 'text-gray-700 hover:text-blue-600'
               }`}>
                 {user?.username}
               </span>
-            </div>
+            </Link>
 
             <Link
               to={`/profile/${user?.id}`}
@@ -147,15 +149,15 @@ const Navbar = () => {
 
             {/* Mobile User Menu */}
             <div className={`pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-              <div className="flex items-center px-3 py-2">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium">
-                    {user?.username?.[0]?.toUpperCase()}
-                  </span>
-                </div>
+              <Link 
+                to={`/profile/${user?.id}`}
+                onClick={() => setIsOpen(false)}
+                className="flex items-center px-3 py-2 hover:opacity-80 transition-opacity"
+              >
+                <Avatar user={user} size="lg" />
                 <div className="ml-3">
                   <div className={`text-base font-medium transition-colors ${
-                    isDark ? 'text-white' : 'text-gray-800'
+                    isDark ? 'text-white hover:text-blue-400' : 'text-gray-800 hover:text-blue-600'
                   }`}>
                     {user?.username}
                   </div>
@@ -165,7 +167,7 @@ const Navbar = () => {
                     {user?.email}
                   </div>
                 </div>
-              </div>
+              </Link>
 
               <Link
                 to={`/profile/${user?.id}`}

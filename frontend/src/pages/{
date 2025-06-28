@@ -1,0 +1,9 @@
+import React, { useState, useEffect } from 'react'; 
+import { Link } from 'react-router-dom'; 
+import { useAuth } from '../contexts/AuthContext'; 
+import { useTheme } from '../contexts/ThemeContext'; 
+import Avatar from '../components/Avatar'; 
+import { HiStar, HiClock, HiFire, HiTrendingUp, HiUsers, HiBadgeCheck } from 'react-icons/hi'; 
+import axios from 'axios'; 
+ 
+const Rankings = (

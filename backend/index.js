@@ -42,6 +42,9 @@ const io = new Server(server, {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Serve static files (uploaded images)
+app.use('/uploads', express.static('uploads'));
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Server is running' });

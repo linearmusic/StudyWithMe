@@ -17,9 +17,16 @@ router.post('/register', async (req, res) => {
     });
 
     if (existingUser) {
-      return res.status(400).json({
-        message: 'User with this email or username already exists'
-      });
+      if (existingUser.email === email) {
+        return res.status(400).json({
+          message: 'User with this email already exists'
+        });
+      }
+      if (existingUser.username === username) {
+        return res.status(400).json({
+          message: 'Username is already taken. Please choose a different username.'
+        });
+      }
     }
 
     // Generate unique friend invite code
@@ -56,6 +63,7 @@ router.post('/register', async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        avatar: user.avatar,
         friendInviteCode: user.friendInviteCode,
         totalStudyTime: user.totalStudyTime,
         weeklyStudyTime: user.weeklyStudyTime,
@@ -77,7 +85,7 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     // Find user by email
-    const user = await User.findOne({ email }).populate('friends', 'username email friendInviteCode totalStudyTime');
+    const user = await User.findOne({ email }).populate('friends', 'username email avatar friendInviteCode totalStudyTime');
 
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
@@ -104,6 +112,7 @@ router.post('/login', async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        avatar: user.avatar,
         friendInviteCode: user.friendInviteCode,
         friends: user.friends,
         totalStudyTime: user.totalStudyTime,
@@ -125,7 +134,7 @@ router.post('/login', async (req, res) => {
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
-      .populate('friends', 'username email friendInviteCode totalStudyTime')
+      .populate('friends', 'username email avatar friendInviteCode totalStudyTime')
       .select('-password');
 
     res.json({
@@ -133,6 +142,7 @@ router.get('/me', authenticateToken, async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        avatar: user.avatar,
         friendInviteCode: user.friendInviteCode,
         friends: user.friends,
         totalStudyTime: user.totalStudyTime,

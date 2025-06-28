@@ -1,8 +1,98 @@
 import express from 'express';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
+import upload from '../middleware/upload.js';
+import path from 'path';
+import fs from 'fs';
 
 const router = express.Router();
+
+// Get rankings/leaderboard
+router.get('/rankings', authenticateToken, async (req, res) => {
+  try {
+    const { filter = 'total' } = req.query;
+    const currentUserId = req.user._id;
+    
+    // Determine sort field based on filter
+    let sortField = 'totalStudyTime';
+    if (filter === 'weekly') sortField = 'weeklyStudyTime';
+    if (filter === 'monthly') sortField = 'monthlyStudyTime';
+    
+    // Get all users sorted by study time
+    const users = await User.find({})
+      .select('username avatar totalStudyTime weeklyStudyTime monthlyStudyTime currentStreak')
+      .sort({ [sortField]: -1 })
+      .limit(50); // Top 50 users
+    
+    // Format rankings
+    const rankings = users.map((user, index) => ({
+      id: user._id,
+      username: user.username,
+      avatar: user.avatar,
+      totalStudyTime: user.totalStudyTime || 0,
+      weeklyStudyTime: user.weeklyStudyTime || 0,
+      monthlyStudyTime: user.monthlyStudyTime || 0,
+      currentStreak: user.currentStreak || 0,
+      rank: index + 1
+    }));
+    
+    // Find current user's rank
+    const myRank = rankings.find(user => user.id.toString() === currentUserId.toString());
+    
+    res.json({
+      rankings,
+      myRank: myRank || null
+    });
+  } catch (error) {
+    console.error('Get rankings error:', error);
+    res.status(500).json({ message: 'Server error while fetching rankings' });
+  }
+});
+
+// Upload profile picture
+router.post('/upload-avatar', authenticateToken, upload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    
+    // Update user's avatar in database
+    await User.findByIdAndUpdate(req.user._id, { avatar: avatarUrl });
+
+    res.json({
+      message: 'Profile picture uploaded successfully',
+      avatarUrl: avatarUrl
+    });
+  } catch (error) {
+    console.error('Upload avatar error:', error);
+    res.status(500).json({ message: 'Server error while uploading avatar' });
+  }
+});
+
+// Delete profile picture
+router.delete('/delete-avatar', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    
+    if (user.avatar) {
+      // Delete the file from filesystem
+      const filePath = path.join(process.cwd(), user.avatar);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      
+      // Remove avatar from database
+      await User.findByIdAndUpdate(req.user._id, { avatar: '' });
+    }
+
+    res.json({ message: 'Profile picture deleted successfully' });
+  } catch (error) {
+    console.error('Delete avatar error:', error);
+    res.status(500).json({ message: 'Server error while deleting avatar' });
+  }
+});
 
 // Add friend by invite code
 router.post('/add-friend', authenticateToken, async (req, res) => {
@@ -43,6 +133,7 @@ router.post('/add-friend', authenticateToken, async (req, res) => {
         id: friendUser._id,
         username: friendUser.username,
         email: friendUser.email,
+        avatar: friendUser.avatar,
         friendInviteCode: friendUser.friendInviteCode,
         totalStudyTime: friendUser.totalStudyTime
       }
@@ -79,13 +170,14 @@ router.delete('/remove-friend/:friendId', authenticateToken, async (req, res) =>
 router.get('/friends', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
-      .populate('friends', 'username email friendInviteCode totalStudyTime weeklyStudyTime monthlyStudyTime studySessions')
+      .populate('friends', 'username email avatar friendInviteCode totalStudyTime weeklyStudyTime monthlyStudyTime studySessions')
       .select('friends');
 
     const friendsWithStats = user.friends.map(friend => ({
       id: friend._id,
       username: friend.username,
       email: friend.email,
+      avatar: friend.avatar,
       friendInviteCode: friend.friendInviteCode,
       totalStudyTime: friend.totalStudyTime,
       weeklyStudyTime: friend.weeklyStudyTime,
@@ -124,6 +216,7 @@ router.get('/profile/:userId', authenticateToken, async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
+        avatar: user.avatar,
         totalStudyTime: user.totalStudyTime,
         weeklyStudyTime: user.weeklyStudyTime,
         monthlyStudyTime: user.monthlyStudyTime,

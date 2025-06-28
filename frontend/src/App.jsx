@@ -10,6 +10,7 @@ import Schedule from './pages/Schedule'
 import Sessions from './pages/Sessions'
 import Statistics from './pages/Statistics'
 import Profile from './pages/Profile'
+import Rankings from './pages/Rankings'
 
 function App() {
   const { user, loading } = useAuth()
@@ -57,6 +58,10 @@ function App() {
             <Route 
               path="/statistics" 
               element={<Statistics />} 
+            />
+            <Route 
+              path="/rankings" 
+              element={<Rankings />} 
             />
             <Route 
               path="/profile/:userId?" 

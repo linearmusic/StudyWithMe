@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSocket } from '../contexts/SocketContext'
 import { useTheme } from '../contexts/ThemeContext'
+import Avatar from '../components/Avatar'
 import { 
   HiUserAdd, 
   HiClipboardCopy, 
@@ -244,11 +245,7 @@ const Friends = () => {
                       <div className="flex items-start justify-between">
                         <div className="flex items-center space-x-4">
                           <div className="relative">
-                            <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                              <span className="text-white font-medium text-lg">
-                                {friend.username[0].toUpperCase()}
-                              </span>
-                            </div>
+                            <Avatar user={friend} size="md" />
                             {isOnline && (
                               <div className={`absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 ${
                                 isDark ? 'border-gray-800' : 'border-white'
