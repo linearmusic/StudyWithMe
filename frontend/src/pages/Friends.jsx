@@ -257,11 +257,14 @@ const Friends = () => {
                           </div>
 
                           <div>
-                            <h3 className={`text-lg font-medium transition-colors ${
-                              isDark ? 'text-white' : 'text-gray-900'
-                            }`}>
-                              {friend.username}
-                            </h3>
+                            <Link
+                              to={`/profile/${friendId}`}
+                              className={`text-lg font-medium transition-colors hover:text-blue-600 cursor-pointer ${
+                                isDark ? 'text-white hover:text-blue-400' : 'text-gray-900 hover:text-blue-600'
+                              }`}
+                            >
+                              <h3>{friend.username}</h3>
+                            </Link>
                             <div className="flex items-center space-x-4 mt-1">
                               <div className={`flex items-center text-sm transition-colors ${
                                 isDark ? 'text-gray-400' : 'text-gray-600'

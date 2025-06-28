@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useSocket } from '../contexts/SocketContext'
 import { useTheme } from '../contexts/ThemeContext'
@@ -621,16 +622,19 @@ const Dashboard = () => {
                     const status = friendsStudyStatus[friendId]
                     return (
                       <div key={friendId} className="flex items-center justify-between">
-                        <div className="flex items-center">
+                        <Link 
+                          to={`/profile/${friendId}`}
+                          className="flex items-center hover:opacity-80 transition-opacity"
+                        >
                           <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
                             <span className="text-white text-xs font-medium">
                               {friend.username[0].toUpperCase()}
                             </span>
                           </div>
-                          <span className={`ml-2 text-xs font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          <span className={`ml-2 text-xs font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {friend.username}
                           </span>
-                        </div>
+                        </Link>
                         
                         {status?.studying ? (
                           <div className="flex items-center">
