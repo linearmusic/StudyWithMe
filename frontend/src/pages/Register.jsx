@@ -6,10 +6,7 @@ import { HiClock, HiEye, HiEyeOff, HiSun, HiMoon } from 'react-icons/hi'
 import OTPVerification from '../components/OTPVerification'
 
 // API URL configuration for different environments
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD 
-    ? 'https://studywithme-kztj.onrender.com/api' 
-    : 'http://localhost:3001/api')
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 const Register = () => {
   const [formData, setFormData] = useState({

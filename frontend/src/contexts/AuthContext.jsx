@@ -5,10 +5,7 @@ import toast from 'react-hot-toast'
 const AuthContext = createContext()
 
 // API URL configuration for different environments
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD 
-    ? 'https://studywithme-kztj.onrender.com/api' 
-    : 'http://localhost:3001/api')
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 // Configure axios defaults
 axios.defaults.baseURL = API_URL

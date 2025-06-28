@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 
 // API URL configuration for different environments
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD 
-    ? 'https://studywithme-kztj.onrender.com/api' 
-    : 'http://localhost:3001/api');
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const OTPVerification = ({ email, userId, onVerificationSuccess, onResendOTP }) => {
   const [otp, setOtp] = useState('');
