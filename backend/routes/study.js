@@ -60,14 +60,16 @@ router.post('/session/stop', authenticateToken, async (req, res) => {
           actualEndTime: sessionData.endTime
         });
 
-        // Check if schedule target is met
-        const totalScheduleDuration = schedule.completedSessions.reduce(
-          (total, session) => total + session.duration, 0
-        );
-        const plannedDuration = schedule.endTime.getTime() - schedule.startTime.getTime();
-        
-        if (totalScheduleDuration >= plannedDuration) {
-          schedule.completed = true;
+        // Check if schedule target is met (only for schedules with endTime)
+        if (schedule.endTime) {
+          const totalScheduleDuration = schedule.completedSessions.reduce(
+            (total, session) => total + session.duration, 0
+          );
+          const plannedDuration = schedule.endTime.getTime() - schedule.startTime.getTime();
+          
+          if (totalScheduleDuration >= plannedDuration) {
+            schedule.completed = true;
+          }
         }
       }
     }
@@ -99,7 +101,7 @@ router.post('/schedule', authenticateToken, async (req, res) => {
       title,
       subject,
       startTime: new Date(startTime),
-      endTime: new Date(endTime),
+      endTime: endTime ? new Date(endTime) : null,  // Handle optional endTime
       recurring: recurring || 'none'
     };
 
