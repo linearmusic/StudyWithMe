@@ -47,7 +47,7 @@ router.post('/session/stop', authenticateToken, async (req, res) => {
 
     // Add session to user
     const user = await User.findById(userId);
-    user.addStudySession(sessionData);
+    const newAchievements = user.addStudySession(sessionData);
 
     // If this was for a scheduled study, mark progress
     if (scheduleId) {
@@ -60,29 +60,41 @@ router.post('/session/stop', authenticateToken, async (req, res) => {
           actualEndTime: sessionData.endTime
         });
 
-        // Check if schedule target is met (only for schedules with endTime)
-        if (schedule.endTime) {
-          const totalScheduleDuration = schedule.completedSessions.reduce(
-            (total, session) => total + session.duration, 0
-          );
-          const plannedDuration = schedule.endTime.getTime() - schedule.startTime.getTime();
-          
-          if (totalScheduleDuration >= plannedDuration) {
-            schedule.completed = true;
-          }
+        // Check if schedule target is met
+        const totalScheduleDuration = schedule.completedSessions.reduce(
+          (total, session) => total + session.duration, 0
+        );
+        const plannedDuration = schedule.endTime.getTime() - schedule.startTime.getTime();
+        
+        if (totalScheduleDuration >= plannedDuration) {
+          schedule.completed = true;
         }
       }
     }
 
     await user.save();
 
+    // Calculate today's progress for daily goal
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const todayStudyTime = user.studySessions
+      .filter(session => session.startTime >= today && session.startTime < tomorrow)
+      .reduce((total, session) => total + session.duration, 0);
+
     res.json({
       message: 'Study session completed',
       session: sessionData,
+      newAchievements,
       stats: {
         totalStudyTime: user.totalStudyTime,
         weeklyStudyTime: user.weeklyStudyTime,
-        monthlyStudyTime: user.monthlyStudyTime
+        monthlyStudyTime: user.monthlyStudyTime,
+        currentStreak: user.currentStreak,
+        todayStudyTime,
+        dailyGoal: user.dailyGoal
       }
     });
   } catch (error) {
@@ -101,7 +113,7 @@ router.post('/schedule', authenticateToken, async (req, res) => {
       title,
       subject,
       startTime: new Date(startTime),
-      endTime: endTime ? new Date(endTime) : null,  // Handle optional endTime
+      endTime: new Date(endTime),
       recurring: recurring || 'none'
     };
 
@@ -167,6 +179,133 @@ router.delete('/schedule/:scheduleId', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Delete schedule error:', error);
     res.status(500).json({ message: 'Server error while deleting schedule' });
+  }
+});
+
+// Get all study sessions
+router.get('/sessions', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    // Sort sessions by most recent first
+    const sessions = user.studySessions.sort((a, b) => 
+      new Date(b.startTime) - new Date(a.startTime)
+    );
+
+    res.json({
+      sessions,
+      totalSessions: sessions.length
+    });
+  } catch (error) {
+    console.error('Get sessions error:', error);
+    res.status(500).json({ message: 'Server error while fetching sessions' });
+  }
+});
+
+// Delete study session
+router.delete('/session/:sessionId', authenticateToken, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    const session = user.studySessions.id(sessionId);
+
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+
+    // Subtract session duration from totals
+    user.totalStudyTime = Math.max(0, user.totalStudyTime - session.duration);
+    
+    // Update weekly and monthly stats if session was recent
+    const now = new Date();
+    const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    if (session.startTime >= weekStart) {
+      user.weeklyStudyTime = Math.max(0, user.weeklyStudyTime - session.duration);
+    }
+    
+    if (session.startTime >= monthStart) {
+      user.monthlyStudyTime = Math.max(0, user.monthlyStudyTime - session.duration);
+    }
+
+    // Remove session
+    user.studySessions.pull(sessionId);
+    await user.save();
+
+    res.json({ 
+      message: 'Session deleted successfully',
+      stats: {
+        totalStudyTime: user.totalStudyTime,
+        weeklyStudyTime: user.weeklyStudyTime,
+        monthlyStudyTime: user.monthlyStudyTime
+      }
+    });
+  } catch (error) {
+    console.error('Delete session error:', error);
+    res.status(500).json({ message: 'Server error while deleting session' });
+  }
+});
+
+// Set daily goal
+router.put('/goal', authenticateToken, async (req, res) => {
+  try {
+    const { dailyGoal } = req.body;
+    const userId = req.user._id;
+
+    // Validate goal (between 15 minutes and 12 hours)
+    if (!dailyGoal || dailyGoal < 900000 || dailyGoal > 43200000) {
+      return res.status(400).json({ 
+        message: 'Daily goal must be between 15 minutes and 12 hours' 
+      });
+    }
+
+    const user = await User.findById(userId);
+    user.dailyGoal = dailyGoal;
+    await user.save();
+
+    res.json({
+      message: 'Daily goal updated successfully',
+      dailyGoal: user.dailyGoal
+    });
+  } catch (error) {
+    console.error('Set goal error:', error);
+    res.status(500).json({ message: 'Server error while setting goal' });
+  }
+});
+
+// Get today's progress
+router.get('/today', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todayStudyTime = user.studySessions
+      .filter(session => session.startTime >= today && session.startTime < tomorrow)
+      .reduce((total, session) => total + session.duration, 0);
+
+    const todaySessions = user.studySessions
+      .filter(session => session.startTime >= today && session.startTime < tomorrow)
+      .length;
+
+    res.json({
+      todayStudyTime,
+      todaySessions,
+      dailyGoal: user.dailyGoal,
+      currentStreak: user.currentStreak,
+      achievements: user.achievements.slice(-5) // Last 5 achievements
+    });
+  } catch (error) {
+    console.error('Get today error:', error);
+    res.status(500).json({ message: 'Server error while fetching today\'s progress' });
   }
 });
 

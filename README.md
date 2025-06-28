@@ -69,12 +69,17 @@ Study Together/
 
 3. **Create environment variables:**
    ```bash
-   # Create .env file with:
-   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/study-together
-   JWT_SECRET=your-super-secret-jwt-key
-   PORT=3001
-   NODE_ENV=development
+   # Copy the example file and fill in your actual values:
+   cp env.example .env
+   
+   # Edit .env with your actual credentials:
+   # MONGODB_URI=mongodb+srv://your-username:your-password@cluster.mongodb.net/study-together
+   # JWT_SECRET=your-super-secret-jwt-key
+   # PORT=3001
+   # NODE_ENV=development
    ```
+   
+   ⚠️ **Important**: Never commit your `.env` file. It contains sensitive credentials and is already in `.gitignore`.
 
 4. **Start the server:**
    ```bash
@@ -178,6 +183,8 @@ You can also deploy both frontend and backend on Render as separate services.
 
 ## 🔒 Environment Variables
 
+⚠️ **Security Note**: Never commit `.env` files or expose credentials in your code. Use the provided `env.example` file as a template.
+
 ### Backend (.env)
 ```
 MONGODB_URI=your-mongodb-connection-string
@@ -186,6 +193,11 @@ PORT=3001
 NODE_ENV=production
 FRONTEND_URL=your-frontend-url
 ```
+
+**Setup Instructions:**
+1. Copy `backend/env.example` to `backend/.env`
+2. Replace placeholder values with your actual credentials
+3. The `.env` file is already in `.gitignore` and will not be committed
 
 ### Frontend (Vercel Environment Variables)
 ```

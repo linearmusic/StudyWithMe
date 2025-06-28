@@ -1,6 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -27,7 +27,7 @@ router.post('/register', async (req, res) => {
     let isUnique = false;
     
     while (!isUnique) {
-      friendInviteCode = uuidv4().slice(0, 8).toUpperCase();
+      friendInviteCode = crypto.randomBytes(4).toString('hex').toUpperCase();
       const codeExists = await User.findOne({ friendInviteCode });
       if (!codeExists) isUnique = true;
     }
@@ -45,7 +45,7 @@ router.post('/register', async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || 'fallback_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -59,7 +59,10 @@ router.post('/register', async (req, res) => {
         friendInviteCode: user.friendInviteCode,
         totalStudyTime: user.totalStudyTime,
         weeklyStudyTime: user.weeklyStudyTime,
-        monthlyStudyTime: user.monthlyStudyTime
+        monthlyStudyTime: user.monthlyStudyTime,
+        dailyGoal: user.dailyGoal,
+        currentStreak: user.currentStreak,
+        achievements: user.achievements
       }
     });
   } catch (error) {
@@ -90,7 +93,7 @@ router.post('/login', async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || 'fallback_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -106,6 +109,9 @@ router.post('/login', async (req, res) => {
         totalStudyTime: user.totalStudyTime,
         weeklyStudyTime: user.weeklyStudyTime,
         monthlyStudyTime: user.monthlyStudyTime,
+        dailyGoal: user.dailyGoal,
+        currentStreak: user.currentStreak,
+        achievements: user.achievements,
         studySchedules: user.studySchedules
       }
     });
@@ -132,6 +138,9 @@ router.get('/me', authenticateToken, async (req, res) => {
         totalStudyTime: user.totalStudyTime,
         weeklyStudyTime: user.weeklyStudyTime,
         monthlyStudyTime: user.monthlyStudyTime,
+        dailyGoal: user.dailyGoal,
+        currentStreak: user.currentStreak,
+        achievements: user.achievements,
         studySchedules: user.studySchedules,
         studySessions: user.studySessions.slice(-20) // Last 20 sessions
       }

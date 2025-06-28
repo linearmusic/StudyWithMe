@@ -20,9 +20,24 @@ import {
   HiCalendar,
   HiChartPie,
   HiBadgeCheck,
-  HiBookOpen
+  HiBookOpen,
+  HiStar,
+  HiCheckCircle,
+  HiFire,
+  HiTrophy
 } from 'react-icons/hi'
 import axios from 'axios'
+
+// Achievement definitions matching Dashboard
+const achievementDefs = {
+  'first_session': { icon: HiStar, title: 'First Steps', desc: 'Completed your first study session', color: 'text-yellow-500', bg: 'bg-yellow-50' },
+  'five_sessions': { icon: HiCheckCircle, title: 'Getting Started', desc: 'Completed 5 study sessions', color: 'text-green-500', bg: 'bg-green-50' },
+  'twenty_five_sessions': { icon: HiBadgeCheck, title: 'Dedicated', desc: 'Completed 25 study sessions', color: 'text-blue-500', bg: 'bg-blue-50' },
+  'streak_3': { icon: HiFire, title: '3-Day Streak', desc: 'Studied for 3 consecutive days', color: 'text-orange-500', bg: 'bg-orange-50' },
+  'streak_7': { icon: HiFire, title: 'Week Warrior', desc: 'Studied for 7 consecutive days', color: 'text-red-500', bg: 'bg-red-50' },
+  'streak_30': { icon: HiFire, title: 'Study Master', desc: 'Studied for 30 consecutive days', color: 'text-purple-500', bg: 'bg-purple-50' },
+  'goal_achiever': { icon: HiTrophy, title: 'Goal Crusher', desc: 'Met daily goal for 7 days', color: 'text-indigo-500', bg: 'bg-indigo-50' }
+}
 
 const Statistics = () => {
   const { user } = useAuth()
@@ -146,11 +161,11 @@ const Statistics = () => {
 
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center">
-            <HiChartPie className="w-8 h-8 text-orange-600" />
+            <HiFire className="w-8 h-8 text-orange-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Schedule Completion</p>
+              <p className="text-sm font-medium text-gray-500">Current Streak</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {totalSchedules > 0 ? Math.round((completedSchedules / totalSchedules) * 100) : 0}%
+                {user?.currentStreak || 0} days
               </p>
             </div>
           </div>
@@ -207,62 +222,74 @@ const Statistics = () => {
           )}
         </div>
 
-        {/* Study Streaks and Achievements */}
+        {/* User Achievements */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Achievements</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-              <div className="flex items-center">
-                <HiBadgeCheck className="w-6 h-6 text-blue-600 mr-3" />
-                <div>
-                  <h3 className="font-medium text-gray-900">Study Champion</h3>
-                  <p className="text-sm text-gray-600">Complete 10 study sessions</p>
-                </div>
-              </div>
-              <div className="text-blue-600 font-semibold">
-                {stats.totalSessions >= 10 ? '✓' : `${stats.totalSessions}/10`}
-              </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">🏆 Your Achievements</h2>
+          
+          {user?.achievements && user.achievements.length > 0 ? (
+            <div className="space-y-3">
+              {user.achievements
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map((achievement, index) => {
+                  const def = achievementDefs[achievement.type]
+                  if (!def) return null
+                  
+                  const Icon = def.icon
+                  return (
+                    <div key={index} className={`flex items-center justify-between p-4 ${def.bg} rounded-lg`}>
+                      <div className="flex items-center">
+                        <Icon className={`w-6 h-6 ${def.color} mr-3`} />
+                        <div>
+                          <h3 className="font-medium text-gray-900">{def.title}</h3>
+                          <p className="text-sm text-gray-600">{def.desc}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-green-600 font-semibold text-xl">✓</div>
+                        <p className="text-xs text-gray-500">
+                          {new Date(achievement.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
             </div>
-
-            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-              <div className="flex items-center">
-                <HiBadgeCheck className="w-6 h-6 text-green-600 mr-3" />
-                <div>
-                  <h3 className="font-medium text-gray-900">Time Master</h3>
-                  <p className="text-sm text-gray-600">Study for 50 hours total</p>
-                </div>
-              </div>
-              <div className="text-green-600 font-semibold">
-                {stats.totalStudyTime >= 50 * 60 * 60 * 1000 ? '✓' : 
-                 `${Math.floor(stats.totalStudyTime / (1000 * 60 * 60))}/50`}
-              </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <HiTrophy className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <p className="mb-2">No achievements yet</p>
+              <p className="text-sm">Start studying to unlock your first achievement!</p>
             </div>
+          )}
 
-            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
-              <div className="flex items-center">
-                <HiBadgeCheck className="w-6 h-6 text-purple-600 mr-3" />
-                <div>
-                  <h3 className="font-medium text-gray-900">Schedule Keeper</h3>
-                  <p className="text-sm text-gray-600">Complete 5 scheduled sessions</p>
+          {/* Progress towards next achievements */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h3 className="text-md font-medium text-gray-900 mb-3">Progress Towards Next Goals</h3>
+            <div className="space-y-3">
+              {/* Sessions milestone */}
+              {stats.totalSessions < 25 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">
+                    {stats.totalSessions < 5 ? 'First 5 Sessions' : stats.totalSessions < 25 ? '25 Sessions' : ''}
+                  </span>
+                  <span className="font-medium">
+                    {stats.totalSessions}/{stats.totalSessions < 5 ? 5 : 25}
+                  </span>
                 </div>
-              </div>
-              <div className="text-purple-600 font-semibold">
-                {completedSchedules >= 5 ? '✓' : `${completedSchedules}/5`}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg">
-              <div className="flex items-center">
-                <HiBadgeCheck className="w-6 h-6 text-orange-600 mr-3" />
-                <div>
-                  <h3 className="font-medium text-gray-900">Weekly Warrior</h3>
-                  <p className="text-sm text-gray-600">Study 10 hours in a week</p>
+              )}
+              
+              {/* Streak milestone */}
+              {(user?.currentStreak || 0) < 30 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">
+                    {(user?.currentStreak || 0) < 3 ? '3-Day Streak' : 
+                     (user?.currentStreak || 0) < 7 ? '7-Day Streak' : '30-Day Streak'}
+                  </span>
+                  <span className="font-medium">
+                    {user?.currentStreak || 0}/{(user?.currentStreak || 0) < 3 ? 3 : (user?.currentStreak || 0) < 7 ? 7 : 30}
+                  </span>
                 </div>
-              </div>
-              <div className="text-orange-600 font-semibold">
-                {stats.weeklyStudyTime >= 10 * 60 * 60 * 1000 ? '✓' : 
-                 `${Math.floor(stats.weeklyStudyTime / (1000 * 60 * 60))}/10`}
-              </div>
+              )}
             </div>
           </div>
         </div>

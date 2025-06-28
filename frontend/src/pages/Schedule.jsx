@@ -21,7 +21,9 @@ const Schedule = () => {
   const [formData, setFormData] = useState({
     title: '',
     subject: '',
+    startDate: '',
     startTime: '',
+    endDate: '',
     endTime: '',
     recurring: 'none'
   })
@@ -37,7 +39,9 @@ const Schedule = () => {
     setFormData({
       title: '',
       subject: '',
+      startDate: '',
       startTime: '',
+      endDate: '',
       endTime: '',
       recurring: 'none'
     })
@@ -49,7 +53,24 @@ const Schedule = () => {
     setIsLoading(true)
 
     try {
-      const response = await axios.post('/study/schedule', formData)
+      // Create date objects and adjust for timezone to preserve the exact time entered
+      const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`)
+      const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`)
+      
+      // Adjust for timezone offset to preserve the local time when stored as UTC
+      const timezoneOffset = startDateTime.getTimezoneOffset() * 60000
+      const adjustedStartTime = new Date(startDateTime.getTime() - timezoneOffset)
+      const adjustedEndTime = new Date(endDateTime.getTime() - timezoneOffset)
+      
+      const scheduleData = {
+        title: formData.title,
+        subject: formData.subject,
+        startTime: adjustedStartTime.toISOString(),
+        endTime: adjustedEndTime.toISOString(),
+        recurring: formData.recurring
+      }
+
+      const response = await axios.post('/study/schedule', scheduleData)
       const newSchedule = response.data.schedule
 
       setSchedules([...schedules, newSchedule])
@@ -75,7 +96,24 @@ const Schedule = () => {
     setIsLoading(true)
 
     try {
-      const response = await axios.put(`/study/schedule/${editingSchedule._id}`, formData)
+      // Create date objects and adjust for timezone to preserve the exact time entered
+      const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`)
+      const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`)
+      
+      // Adjust for timezone offset to preserve the local time when stored as UTC
+      const timezoneOffset = startDateTime.getTimezoneOffset() * 60000
+      const adjustedStartTime = new Date(startDateTime.getTime() - timezoneOffset)
+      const adjustedEndTime = new Date(endDateTime.getTime() - timezoneOffset)
+      
+      const scheduleData = {
+        title: formData.title,
+        subject: formData.subject,
+        startTime: adjustedStartTime.toISOString(),
+        endTime: adjustedEndTime.toISOString(),
+        recurring: formData.recurring
+      }
+
+      const response = await axios.put(`/study/schedule/${editingSchedule._id}`, scheduleData)
       const updatedSchedule = response.data.schedule
 
       const updatedSchedules = schedules.map(s => 
@@ -117,11 +155,22 @@ const Schedule = () => {
 
   const startEditingSchedule = (schedule) => {
     setEditingSchedule(schedule)
+    
+    const startDateTime = new Date(schedule.startTime)
+    const endDateTime = new Date(schedule.endTime)
+    
+    // Adjust the dates to show the original local time (reverse the timezone adjustment)
+    const timezoneOffset = startDateTime.getTimezoneOffset() * 60000
+    const localStartTime = new Date(startDateTime.getTime() + timezoneOffset)
+    const localEndTime = new Date(endDateTime.getTime() + timezoneOffset)
+    
     setFormData({
       title: schedule.title,
       subject: schedule.subject,
-      startTime: new Date(schedule.startTime).toISOString().slice(0, 16),
-      endTime: schedule.endTime ? new Date(schedule.endTime).toISOString().slice(0, 16) : '',
+      startDate: localStartTime.toISOString().slice(0, 10),
+      startTime: localStartTime.toISOString().slice(11, 16),
+      endDate: localEndTime.toISOString().slice(0, 10),
+      endTime: localEndTime.toISOString().slice(11, 16),
       recurring: schedule.recurring
     })
   }
@@ -129,11 +178,6 @@ const Schedule = () => {
   const getScheduleProgress = (schedule) => {
     if (!schedule.completedSessions || schedule.completedSessions.length === 0) {
       return 0
-    }
-
-    // If no end time, progress is based on completed sessions (100% when at least one session)
-    if (!schedule.endTime) {
-      return schedule.completedSessions.length > 0 ? 100 : 0
     }
 
     const totalPlannedDuration = new Date(schedule.endTime).getTime() - new Date(schedule.startTime).getTime()
@@ -155,17 +199,19 @@ const Schedule = () => {
   }
 
   const getScheduleDuration = (schedule) => {
-    if (!schedule.endTime) return 0
     return new Date(schedule.endTime).getTime() - new Date(schedule.startTime).getTime()
   }
 
-  // Group schedules by date
+  // Group schedules by date (adjusting for timezone to show original local date)
   const groupedSchedules = schedules.reduce((groups, schedule) => {
-    const date = new Date(schedule.startTime).toDateString()
-    if (!groups[date]) {
-      groups[date] = []
+    const scheduleDate = new Date(schedule.startTime)
+    const timezoneOffset = scheduleDate.getTimezoneOffset() * 60000
+    const localDate = new Date(scheduleDate.getTime() + timezoneOffset)
+    const dateKey = localDate.toDateString()
+    if (!groups[dateKey]) {
+      groups[dateKey] = []
     }
-    groups[date].push(schedule)
+    groups[dateKey].push(schedule)
     return groups
   }, {})
 
@@ -232,25 +278,31 @@ const Schedule = () => {
                                 <div className="flex items-center">
                                   <HiClock className="w-4 h-4 mr-1" />
                                   <span>
-                                    {new Date(schedule.startTime).toLocaleTimeString([], {
-                                      hour: '2-digit',
-                                      minute: '2-digit'
-                                    })}
-                                    {schedule.endTime && (
-                                      ` - ${new Date(schedule.endTime).toLocaleTimeString([], {
-                                        hour: '2-digit',
-                                        minute: '2-digit'
+                                    {(() => {
+                                      // Adjust times to show original local time
+                                      const startTime = new Date(schedule.startTime)
+                                      const endTime = new Date(schedule.endTime)
+                                      const offset = startTime.getTimezoneOffset() * 60000
+                                      const localStart = new Date(startTime.getTime() + offset)
+                                      const localEnd = new Date(endTime.getTime() + offset)
+                                      
+                                      return `${localStart.toLocaleTimeString([], {
+                                        hour: 'numeric',
+                                        minute: '2-digit',
+                                        hour12: true
+                                      })} - ${localEnd.toLocaleTimeString([], {
+                                        hour: 'numeric',
+                                        minute: '2-digit',
+                                        hour12: true
                                       })}`
-                                    )}
+                                    })()}
                                   </span>
                                 </div>
                                 
-                                {duration > 0 && (
-                                  <div className="flex items-center">
-                                    <HiCalendar className="w-4 h-4 mr-1" />
-                                    <span>{formatDuration(duration)}</span>
-                                  </div>
-                                )}
+                                <div className="flex items-center">
+                                  <HiCalendar className="w-4 h-4 mr-1" />
+                                  <span>{formatDuration(duration)}</span>
+                                </div>
 
                                 {schedule.recurring !== 'none' && (
                                   <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
@@ -292,6 +344,23 @@ const Schedule = () => {
                             </div>
 
                             <div className="flex items-center space-x-2 ml-4">
+                              {/* Show Start Session button if schedule is today and not completed */}
+                              {(() => {
+                                const scheduleDate = new Date(schedule.startTime)
+                                const timezoneOffset = scheduleDate.getTimezoneOffset() * 60000
+                                const localScheduleDate = new Date(scheduleDate.getTime() + timezoneOffset)
+                                return localScheduleDate.toDateString() === new Date().toDateString()
+                              })() && !schedule.completed && (
+                                <button
+                                  onClick={() => window.open('/dashboard', '_blank')}
+                                  className="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
+                                  title="Start study session for this schedule"
+                                >
+                                  <HiPlay className="w-4 h-4 inline mr-1" />
+                                  Start
+                                </button>
+                              )}
+                              
                               <button
                                 onClick={() => startEditingSchedule(schedule)}
                                 className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
@@ -386,27 +455,46 @@ const Schedule = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Time
+                  Start Date & Time
                 </label>
-                <input
-                  type="datetime-local"
-                  value={formData.startTime}
-                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    required
+                  />
+                  <input
+                    type="time"
+                    value={formData.startTime}
+                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    required
+                  />
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  End Time <span className="text-gray-500 font-normal">(optional)</span>
+                  End Date & Time
                 </label>
-                <input
-                  type="datetime-local"
-                  value={formData.endTime}
-                  onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    required
+                  />
+                  <input
+                    type="time"
+                    value={formData.endTime}
+                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    required
+                  />
+                </div>
               </div>
 
               <div>

@@ -10,7 +10,8 @@ import {
   HiLogout, 
   HiMenu, 
   HiX,
-  HiClock
+  HiClock,
+  HiAcademicCap
 } from 'react-icons/hi'
 
 const Navbar = () => {
@@ -30,6 +31,7 @@ const Navbar = () => {
     { path: '/dashboard', icon: HiHome, label: 'Dashboard' },
     { path: '/friends', icon: HiUsers, label: 'Friends' },
     { path: '/schedule', icon: HiCalendar, label: 'Schedule' },
+    { path: '/sessions', icon: HiClock, label: 'Sessions' },
     { path: '/statistics', icon: HiChartBar, label: 'Statistics' },
   ]
 
@@ -39,7 +41,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center space-x-2">
-            <HiClock className="w-8 h-8 text-blue-600" />
+            <HiAcademicCap className="w-8 h-8 text-blue-600" />
             <span className="text-xl font-bold text-gray-900">StudyTogether</span>
           </Link>
 

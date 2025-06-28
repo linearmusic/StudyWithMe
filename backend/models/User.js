@@ -85,7 +85,23 @@ const userSchema = new mongoose.Schema({
   lastStudyReset: {
     type: Date,
     default: Date.now
-  }
+  },
+  dailyGoal: {
+    type: Number,
+    default: 7200000 // 2 hours in milliseconds
+  },
+  currentStreak: {
+    type: Number,
+    default: 0
+  },
+  lastStudyDate: Date,
+  achievements: [{
+    type: String,
+    date: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true
 });
@@ -122,6 +138,109 @@ userSchema.methods.addStudySession = function(session) {
   if (session.startTime >= monthStart) {
     this.monthlyStudyTime += session.duration;
   }
+
+  // Update streak
+  this.updateStreak(session.startTime);
+  
+  // Check for achievements
+  return this.checkAchievements();
+};
+
+userSchema.methods.updateStreak = function(sessionDate) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  const sessionDay = new Date(sessionDate);
+  sessionDay.setHours(0, 0, 0, 0);
+  
+  if (!this.lastStudyDate) {
+    // First ever study session
+    this.currentStreak = 1;
+    this.lastStudyDate = sessionDay;
+  } else {
+    const lastStudyDay = new Date(this.lastStudyDate);
+    lastStudyDay.setHours(0, 0, 0, 0);
+    
+    if (sessionDay.getTime() === today.getTime()) {
+      // Studying today
+      if (lastStudyDay.getTime() === yesterday.getTime()) {
+        // Studied yesterday, continue streak
+        this.currentStreak += 1;
+      } else if (lastStudyDay.getTime() === today.getTime()) {
+        // Already studied today, no change
+        return;
+      } else {
+        // Broke streak, start new
+        this.currentStreak = 1;
+      }
+      this.lastStudyDate = sessionDay;
+    }
+  }
+};
+
+userSchema.methods.checkAchievements = function() {
+  const newAchievements = [];
+  
+  // Check if achievement already exists
+  const hasAchievement = (type) => this.achievements.some(a => a.type === type);
+  
+  // First Study Session
+  if (this.studySessions.length === 1 && !hasAchievement('first_session')) {
+    newAchievements.push('first_session');
+  }
+  
+  // 5 Study Sessions
+  if (this.studySessions.length >= 5 && !hasAchievement('five_sessions')) {
+    newAchievements.push('five_sessions');
+  }
+  
+  // 25 Study Sessions
+  if (this.studySessions.length >= 25 && !hasAchievement('twenty_five_sessions')) {
+    newAchievements.push('twenty_five_sessions');
+  }
+  
+  // 3-day streak
+  if (this.currentStreak >= 3 && !hasAchievement('streak_3')) {
+    newAchievements.push('streak_3');
+  }
+  
+  // 7-day streak
+  if (this.currentStreak >= 7 && !hasAchievement('streak_7')) {
+    newAchievements.push('streak_7');
+  }
+  
+  // 30-day streak
+  if (this.currentStreak >= 30 && !hasAchievement('streak_30')) {
+    newAchievements.push('streak_30');
+  }
+  
+  // Study goal achiever (studied at least goal amount for 7 days)
+  const recentSessions = this.studySessions.filter(s => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return s.startTime >= weekAgo;
+  });
+  
+  const dayGroups = {};
+  recentSessions.forEach(session => {
+    const day = session.startTime.toDateString();
+    dayGroups[day] = (dayGroups[day] || 0) + session.duration;
+  });
+  
+  const goalDays = Object.values(dayGroups).filter(time => time >= this.dailyGoal).length;
+  if (goalDays >= 7 && !hasAchievement('goal_achiever')) {
+    newAchievements.push('goal_achiever');
+  }
+  
+  // Add new achievements
+  newAchievements.forEach(type => {
+    this.achievements.push({ type, date: new Date() });
+  });
+  
+  return newAchievements;
 };
 
 export default mongoose.model('User', userSchema); 

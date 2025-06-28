@@ -7,6 +7,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Friends from './pages/Friends'
 import Schedule from './pages/Schedule'
+import Sessions from './pages/Sessions'
 import Statistics from './pages/Statistics'
 import Profile from './pages/Profile'
 
@@ -48,6 +49,10 @@ function App() {
             <Route 
               path="/schedule" 
               element={<Schedule />} 
+            />
+            <Route 
+              path="/sessions" 
+              element={<Sessions />} 
             />
             <Route 
               path="/statistics" 

@@ -12,9 +12,10 @@ import { authenticateSocket } from './middleware/auth.js';
 
 dotenv.config();
 
-// Set JWT secret if not in environment
+// Validate required environment variables
 if (!process.env.JWT_SECRET) {
-  process.env.JWT_SECRET = 'study-together-secret-key-change-in-production';
+  console.error('JWT_SECRET environment variable is required');
+  process.exit(1);
 }
 
 const app = express();
@@ -47,10 +48,19 @@ app.get('/health', (req, res) => {
 });
 
 // Connect to MongoDB
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://aman123:aman123@cluster0.wv3uj.mongodb.net/study-together';
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('MONGODB_URI environment variable is required');
+  process.exit(1);
+}
+
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
 
 // Routes
 app.use('/api/auth', authRoutes);
