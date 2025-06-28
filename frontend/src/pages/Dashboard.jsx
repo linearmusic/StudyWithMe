@@ -13,7 +13,6 @@ import {
   HiCheckCircle,
   HiFire,
   HiStar,
-  HiTrophy,
   HiBadgeCheck
 } from 'react-icons/hi'
 import axios from 'axios'
@@ -27,7 +26,7 @@ const achievementDefs = {
   'streak_3': { icon: HiFire, title: '3-Day Streak', desc: 'Studied for 3 consecutive days', color: 'text-orange-500' },
   'streak_7': { icon: HiFire, title: 'Week Warrior', desc: 'Studied for 7 consecutive days', color: 'text-red-500' },
   'streak_30': { icon: HiFire, title: 'Study Master', desc: 'Studied for 30 consecutive days', color: 'text-purple-500' },
-  'goal_achiever': { icon: HiTrophy, title: 'Goal Crusher', desc: 'Met daily goal for 7 days', color: 'text-indigo-500' }
+  'goal_achiever': { icon: HiBadgeCheck, title: 'Goal Crusher', desc: 'Met daily goal for 7 days', color: 'text-indigo-500' }
 }
 
 const Dashboard = () => {
@@ -520,9 +519,10 @@ const Dashboard = () => {
             {user?.friends && user.friends.length > 0 ? (
               <div className="space-y-3">
                 {user.friends.slice(0, 5).map((friend) => {
-                  const status = friendsStudyStatus[friend.id]
+                  const friendId = friend.id || friend._id
+                  const status = friendsStudyStatus[friendId]
                   return (
-                    <div key={friend.id} className="flex items-center justify-between">
+                    <div key={friendId} className="flex items-center justify-between">
                       <div className="flex items-center">
                         <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                           <span className="text-white text-sm font-medium">

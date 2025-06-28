@@ -23,8 +23,7 @@ import {
   HiBookOpen,
   HiStar,
   HiCheckCircle,
-  HiFire,
-  HiTrophy
+  HiFire
 } from 'react-icons/hi'
 import axios from 'axios'
 
@@ -36,7 +35,7 @@ const achievementDefs = {
   'streak_3': { icon: HiFire, title: '3-Day Streak', desc: 'Studied for 3 consecutive days', color: 'text-orange-500', bg: 'bg-orange-50' },
   'streak_7': { icon: HiFire, title: 'Week Warrior', desc: 'Studied for 7 consecutive days', color: 'text-red-500', bg: 'bg-red-50' },
   'streak_30': { icon: HiFire, title: 'Study Master', desc: 'Studied for 30 consecutive days', color: 'text-purple-500', bg: 'bg-purple-50' },
-  'goal_achiever': { icon: HiTrophy, title: 'Goal Crusher', desc: 'Met daily goal for 7 days', color: 'text-indigo-500', bg: 'bg-indigo-50' }
+  'goal_achiever': { icon: HiBadgeCheck, title: 'Goal Crusher', desc: 'Met daily goal for 7 days', color: 'text-indigo-500', bg: 'bg-indigo-50' }
 }
 
 const Statistics = () => {
@@ -254,13 +253,13 @@ const Statistics = () => {
                   )
                 })}
             </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <HiTrophy className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <p className="mb-2">No achievements yet</p>
-              <p className="text-sm">Start studying to unlock your first achievement!</p>
-            </div>
-          )}
+                     ) : (
+             <div className="text-center py-8 text-gray-500">
+               <HiBadgeCheck className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+               <p className="mb-2">No achievements yet</p>
+               <p className="text-sm">Start studying to unlock your first achievement!</p>
+             </div>
+           )}
 
           {/* Progress towards next achievements */}
           <div className="mt-6 pt-6 border-t border-gray-200">

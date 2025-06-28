@@ -59,7 +59,7 @@ const Friends = () => {
     try {
       await axios.delete(`/users/remove-friend/${friendId}`)
       
-      const updatedFriends = friends.filter(f => f.id !== friendId)
+      const updatedFriends = friends.filter(f => (f.id || f._id) !== friendId)
       setFriends(updatedFriends)
       updateUser({
         friends: updatedFriends
@@ -189,11 +189,12 @@ const Friends = () => {
             {friends.length > 0 ? (
               <div className="divide-y divide-gray-200">
                 {friends.map((friend) => {
-                  const isOnline = onlineFriends.includes(friend.id)
-                  const studyStatus = friendsStudyStatus[friend.id]
+                  const friendId = friend.id || friend._id
+                  const isOnline = onlineFriends.includes(friendId)
+                  const studyStatus = friendsStudyStatus[friendId]
                   
-                  return (
-                    <div key={friend.id} className="p-6">
+                                      return (
+                      <div key={friendId} className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center space-x-4">
                           <div className="relative">
@@ -235,14 +236,14 @@ const Friends = () => {
 
                         <div className="flex items-center space-x-2">
                           <Link
-                            to={`/profile/${friend.id}`}
+                            to={`/profile/${friendId}`}
                             className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                           >
                             View Profile
                           </Link>
                           
                           <button
-                            onClick={() => handleRemoveFriend(friend.id, friend.username)}
+                            onClick={() => handleRemoveFriend(friendId, friend.username)}
                             className="p-1 text-gray-400 hover:text-red-600 transition-colors"
                             title="Remove friend"
                           >
