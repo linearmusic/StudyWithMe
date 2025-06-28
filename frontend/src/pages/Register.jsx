@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { HiClock, HiEye, HiEyeOff, HiSun, HiMoon } from 'react-icons/hi'
+import OTPVerification from '../components/OTPVerification'
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -15,7 +16,9 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
-  const { register } = useAuth()
+  const [showOTPVerification, setShowOTPVerification] = useState(false)
+  const [registrationData, setRegistrationData] = useState(null)
+  const { login } = useAuth()
   const { isDark, toggleTheme } = useTheme()
 
   const handleChange = (e) => {
@@ -63,14 +66,74 @@ const Register = () => {
     }
 
     setIsLoading(true)
+    setErrors({})
 
     try {
-      await register(formData.username, formData.email, formData.password)
+      const response = await fetch('http://localhost:3001/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Registration initiated successfully, show OTP verification
+        setRegistrationData({
+          userId: data.userId,
+          email: data.email
+        })
+        setShowOTPVerification(true)
+      } else {
+        // Handle registration errors
+        if (data.message.includes('email')) {
+          setErrors({ email: data.message })
+        } else if (data.message.includes('username') || data.message.includes('Username')) {
+          setErrors({ username: data.message })
+        } else {
+          setErrors({ general: data.message })
+        }
+      }
     } catch (error) {
       console.error('Registration error:', error)
+      setErrors({ general: 'Connection error. Please try again.' })
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleVerificationSuccess = async (verificationData) => {
+    try {
+      // Auto-login after successful verification
+      localStorage.setItem('token', verificationData.token)
+      login(verificationData.user, verificationData.token)
+    } catch (error) {
+      console.error('Login after verification error:', error)
+      setErrors({ general: 'Verification successful! Please login manually.' })
+    }
+  }
+
+  const handleResendOTP = () => {
+    // Just show a success message, the OTP component handles the actual resend
+    console.log('OTP resent successfully')
+  }
+
+  // Show OTP verification if registration was successful
+  if (showOTPVerification && registrationData) {
+    return (
+      <OTPVerification
+        email={registrationData.email}
+        userId={registrationData.userId}
+        onVerificationSuccess={handleVerificationSuccess}
+        onResendOTP={handleResendOTP}
+      />
+    )
   }
 
   return (
@@ -207,6 +270,12 @@ const Register = () => {
                 <p className="text-xs text-red-600">{errors.password}</p>
               )}
             </div>
+
+            {errors.general && (
+              <div className="text-red-600 text-sm text-center bg-red-50 dark:bg-red-900/50 p-3 rounded-md">
+                {errors.general}
+              </div>
+            )}
 
             <div>
               <label htmlFor="confirmPassword" className={`block text-sm font-medium transition-colors ${

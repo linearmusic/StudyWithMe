@@ -1,6 +1,7 @@
 import express from 'express';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
+import emailService from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -35,10 +36,11 @@ router.post('/session/stop', authenticateToken, async (req, res) => {
     const userId = req.user._id;
 
     const endTime = new Date();
-    const duration = endTime.getTime() - new Date(startTime).getTime();
+    const startTimeDate = new Date(startTime);
+    const duration = endTime.getTime() - startTimeDate.getTime();
 
     const sessionData = {
-      startTime: new Date(startTime),
+      startTime: startTimeDate,
       endTime,
       duration,
       subject: subject || 'General Study',
@@ -73,6 +75,22 @@ router.post('/session/stop', authenticateToken, async (req, res) => {
     }
 
     await user.save();
+
+    // Send achievement email notifications
+    if (newAchievements && newAchievements.length > 0) {
+      try {
+        for (const achievement of newAchievements) {
+          await emailService.sendAchievementNotification(
+            user.email,
+            achievement,
+            user.username
+          );
+        }
+      } catch (emailError) {
+        console.error('Failed to send achievement notifications:', emailError);
+        // Continue without failing the request
+      }
+    }
 
     // Calculate today's progress for daily goal
     const today = new Date();
@@ -122,6 +140,23 @@ router.post('/schedule', authenticateToken, async (req, res) => {
     await user.save();
 
     const newSchedule = user.studySchedules[user.studySchedules.length - 1];
+
+    // Send email notification for the scheduled session
+    try {
+      await emailService.sendSessionNotification(
+        user.email,
+        {
+          title,
+          subject,
+          startTime,
+          endTime
+        },
+        user.username
+      );
+    } catch (emailError) {
+      console.error('Failed to send session notification:', emailError);
+      // Continue without failing the request
+    }
 
     res.json({
       message: 'Schedule created successfully',

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { HiClock, HiEye, HiEyeOff, HiSun, HiMoon } from 'react-icons/hi'
+import OTPVerification from '../components/OTPVerification'
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,9 @@ const Login = () => {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [showOTPVerification, setShowOTPVerification] = useState(false)
+  const [unverifiedUser, setUnverifiedUser] = useState(null)
   const { login } = useAuth()
   const { isDark, toggleTheme } = useTheme()
 
@@ -24,14 +28,65 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
+    setError('')
 
     try {
-      await login(formData.email, formData.password)
+      const response = await fetch('http://localhost:3001/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        localStorage.setItem('token', data.token)
+        login(data.user, data.token)
+      } else if (response.status === 403 && data.needsVerification) {
+        // Email not verified
+        setUnverifiedUser({
+          userId: data.userId,
+          email: data.email
+        })
+        setShowOTPVerification(true)
+      } else {
+        setError(data.message || 'Login failed. Please try again.')
+      }
     } catch (error) {
       console.error('Login error:', error)
+      setError('Connection error. Please try again.')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleVerificationSuccess = async (verificationData) => {
+    try {
+      localStorage.setItem('token', verificationData.token)
+      login(verificationData.user, verificationData.token)
+    } catch (error) {
+      console.error('Login after verification error:', error)
+      setError('Verification successful! Please login manually.')
+      setShowOTPVerification(false)
+    }
+  }
+
+  const handleResendOTP = () => {
+    console.log('OTP resent successfully')
+  }
+
+  // Show OTP verification if user email is not verified
+  if (showOTPVerification && unverifiedUser) {
+    return (
+      <OTPVerification
+        email={unverifiedUser.email}
+        userId={unverifiedUser.userId}
+        onVerificationSuccess={handleVerificationSuccess}
+        onResendOTP={handleResendOTP}
+      />
+    )
   }
 
   return (
@@ -99,6 +154,12 @@ const Login = () => {
                 />
               </div>
             </div>
+
+            {error && (
+              <div className="text-red-600 text-sm text-center bg-red-50 dark:bg-red-900/50 p-3 rounded-md">
+                {error}
+              </div>
+            )}
 
             <div>
               <label htmlFor="password" className={`block text-sm font-medium transition-colors ${

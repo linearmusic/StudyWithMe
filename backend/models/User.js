@@ -25,6 +25,18 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailVerificationOTP: {
+    type: String,
+    default: null
+  },
+  otpExpiresAt: {
+    type: Date,
+    default: null
+  },
   friends: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

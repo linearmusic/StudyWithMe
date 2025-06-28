@@ -3,10 +3,11 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
+import emailService from '../services/emailService.js';
 
 const router = express.Router();
 
-// Register
+// Register - Send OTP
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -29,6 +30,10 @@ router.post('/register', async (req, res) => {
       }
     }
 
+    // Generate OTP and set expiration (10 minutes)
+    const otp = emailService.generateOTP();
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
     // Generate unique friend invite code
     let friendInviteCode;
     let isUnique = false;
@@ -39,14 +44,67 @@ router.post('/register', async (req, res) => {
       if (!codeExists) isUnique = true;
     }
 
-    // Create new user
+    // Create new user with unverified email
     const user = new User({
       username,
       email,
       password,
-      friendInviteCode
+      friendInviteCode,
+      emailVerificationOTP: otp,
+      otpExpiresAt,
+      isEmailVerified: false
     });
 
+    await user.save();
+
+    // Send OTP email
+    const emailSent = await emailService.sendOTPEmail(email, otp, username);
+    
+    if (!emailSent) {
+      await User.findByIdAndDelete(user._id); // Clean up if email fails
+      return res.status(500).json({ 
+        message: 'Failed to send verification email. Please try again.' 
+      });
+    }
+
+    res.status(201).json({
+      message: 'Registration initiated. Please check your email for the verification code.',
+      userId: user._id,
+      email: email
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Server error during registration' });
+  }
+});
+
+// Verify OTP and complete registration
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const { userId, otp } = req.body;
+
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ message: 'Email already verified' });
+    }
+
+    if (!user.emailVerificationOTP || user.emailVerificationOTP !== otp) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+
+    if (user.otpExpiresAt < new Date()) {
+      return res.status(400).json({ message: 'OTP has expired' });
+    }
+
+    // Verify email and clear OTP fields
+    user.isEmailVerified = true;
+    user.emailVerificationOTP = null;
+    user.otpExpiresAt = null;
     await user.save();
 
     // Generate JWT token
@@ -56,8 +114,8 @@ router.post('/register', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    res.status(201).json({
-      message: 'User created successfully',
+    res.json({
+      message: 'Email verified successfully! Registration complete.',
       token,
       user: {
         id: user._id,
@@ -74,8 +132,49 @@ router.post('/register', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error during registration' });
+    console.error('OTP verification error:', error);
+    res.status(500).json({ message: 'Server error during verification' });
+  }
+});
+
+// Resend OTP
+router.post('/resend-otp', async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ message: 'Email already verified' });
+    }
+
+    // Generate new OTP and set expiration
+    const otp = emailService.generateOTP();
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    user.emailVerificationOTP = otp;
+    user.otpExpiresAt = otpExpiresAt;
+    await user.save();
+
+    // Send OTP email
+    const emailSent = await emailService.sendOTPEmail(user.email, otp, user.username);
+    
+    if (!emailSent) {
+      return res.status(500).json({ 
+        message: 'Failed to send verification email. Please try again.' 
+      });
+    }
+
+    res.json({
+      message: 'Verification code sent successfully. Please check your email.'
+    });
+  } catch (error) {
+    console.error('Resend OTP error:', error);
+    res.status(500).json({ message: 'Server error during resend' });
   }
 });
 
@@ -96,6 +195,16 @@ router.post('/login', async (req, res) => {
     
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Check if email is verified
+    if (!user.isEmailVerified) {
+      return res.status(403).json({ 
+        message: 'Please verify your email address before logging in.',
+        userId: user._id,
+        email: user.email,
+        needsVerification: true
+      });
     }
 
     // Generate JWT token
