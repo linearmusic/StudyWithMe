@@ -7,7 +7,7 @@ const AuthContext = createContext()
 // API URL configuration for different environments
 const API_URL = import.meta.env.VITE_API_URL || 
   (import.meta.env.PROD 
-    ? 'https://your-backend-url.onrender.com/api' 
+    ? 'https://studywithme-kztj.onrender.com/api' 
     : 'http://localhost:3001/api')
 
 // Configure axios defaults

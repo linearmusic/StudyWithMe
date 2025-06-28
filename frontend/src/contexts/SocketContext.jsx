@@ -26,7 +26,7 @@ export const SocketProvider = ({ children }) => {
       // Socket URL configuration for different environments
       const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 
         (import.meta.env.PROD 
-          ? 'https://your-backend-url.onrender.com' 
+          ? 'https://studywithme-kztj.onrender.com' 
           : 'http://localhost:3001')
       
       const newSocket = io(SOCKET_URL, {

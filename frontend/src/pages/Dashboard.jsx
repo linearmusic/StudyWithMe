@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSocket } from '../contexts/SocketContext'
 import { 
@@ -92,7 +92,7 @@ const Dashboard = () => {
     }
 
     return () => clearInterval(pomodoroInterval.current)
-  }, [isPomodoroMode, isStudying, isPomodoroPaused])
+  }, [isPomodoroMode, isStudying, isPomodoroPaused, handlePomodoroComplete])
 
   const fetchQuickStats = async () => {
     try {
@@ -131,7 +131,7 @@ const Dashboard = () => {
     }
   }
 
-  const handlePomodoroComplete = () => {
+  const handlePomodoroComplete = useCallback(() => {
     if (pomodoroState === 'work') {
       // Work session complete, start break
       setPomodoroState('break')
@@ -139,7 +139,7 @@ const Dashboard = () => {
       toast.success('🍅 Work session complete! Time for a break!')
       
       // Browser notification
-      if (Notification.permission === 'granted') {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         new Notification('Pomodoro Complete', { 
           body: 'Work session finished! Take a 5-minute break.' 
         })
@@ -150,13 +150,13 @@ const Dashboard = () => {
       setPomodoroTimeLeft(25 * 60) // 25 minute work
       toast.success('✨ Break over! Ready for another study session?')
       
-      if (Notification.permission === 'granted') {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         new Notification('Break Complete', { 
           body: 'Break finished! Time to study.' 
         })
       }
     }
-  }
+  }, [pomodoroState])
 
   const togglePomodoroMode = () => {
     setIsPomodoroMode(!isPomodoroMode)
@@ -166,7 +166,7 @@ const Dashboard = () => {
     
     if (!isPomodoroMode) {
       // Request notification permission
-      if (Notification.permission === 'default') {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
         Notification.requestPermission()
       }
       toast.success('🍅 Pomodoro mode activated!')
