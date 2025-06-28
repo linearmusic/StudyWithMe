@@ -18,7 +18,7 @@ const Register = () => {
   const [errors, setErrors] = useState({})
   const [showOTPVerification, setShowOTPVerification] = useState(false)
   const [registrationData, setRegistrationData] = useState(null)
-  const { login } = useAuth()
+  const { loginWithToken } = useAuth()
   const { isDark, toggleTheme } = useTheme()
 
   const handleChange = (e) => {
@@ -69,7 +69,7 @@ const Register = () => {
     setErrors({})
 
     try {
-      const response = await fetch('http://localhost:3001/auth/register', {
+      const response = await fetch('http://localhost:3001/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -111,8 +111,7 @@ const Register = () => {
   const handleVerificationSuccess = async (verificationData) => {
     try {
       // Auto-login after successful verification
-      localStorage.setItem('token', verificationData.token)
-      login(verificationData.user, verificationData.token)
+      loginWithToken(verificationData.user, verificationData.token)
     } catch (error) {
       console.error('Login after verification error:', error)
       setErrors({ general: 'Verification successful! Please login manually.' })

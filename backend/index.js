@@ -5,12 +5,13 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
+// Load environment variables FIRST
+dotenv.config();
+
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import studyRoutes from './routes/study.js';
 import { authenticateSocket } from './middleware/auth.js';
-
-dotenv.config();
 
 // Validate required environment variables
 if (!process.env.JWT_SECRET) {
@@ -51,18 +52,23 @@ app.get('/health', (req, res) => {
 });
 
 // Connect to MongoDB
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/studytogether';
 
-if (!MONGODB_URI) {
-  console.error('MONGODB_URI environment variable is required');
-  process.exit(1);
-}
-
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
+console.log('Attempting to connect to MongoDB...');
+mongoose.connect(MONGODB_URI, {
+  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+  connectTimeoutMS: 10000, // Give up initial connection after 10s
+})
+  .then(() => {
+    console.log('✅ Connected to MongoDB successfully');
+  })
   .catch((err) => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
+    console.error('❌ MongoDB connection error:', err.message);
+    console.log('⚠️  Continuing without MongoDB (some features may not work)');
+    console.log('💡 To fix this:');
+    console.log('   1. Install MongoDB locally, OR');
+    console.log('   2. Use MongoDB Atlas cloud service, OR');
+    console.log('   3. Update MONGODB_URI in .env file');
   });
 
 // Routes

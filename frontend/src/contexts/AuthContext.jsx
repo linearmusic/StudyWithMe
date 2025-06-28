@@ -65,6 +65,19 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Login with existing token and user data (for email verification)
+  const loginWithToken = (userData, token) => {
+    try {
+      localStorage.setItem('token', token)
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      setUser(userData)
+      toast.success('Email verified successfully! Welcome!')
+    } catch (error) {
+      console.error('Error logging in with token:', error)
+      toast.error('Login error after verification')
+    }
+  }
+
   const register = async (username, email, password) => {
     try {
       const response = await axios.post('/auth/register', { 
@@ -102,6 +115,7 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     login,
+    loginWithToken,
     register,
     logout,
     updateUser,

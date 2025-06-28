@@ -15,7 +15,7 @@ const Login = () => {
   const [error, setError] = useState('')
   const [showOTPVerification, setShowOTPVerification] = useState(false)
   const [unverifiedUser, setUnverifiedUser] = useState(null)
-  const { login } = useAuth()
+  const { login, loginWithToken } = useAuth()
   const { isDark, toggleTheme } = useTheme()
 
   const handleChange = (e) => {
@@ -31,7 +31,7 @@ const Login = () => {
     setError('')
 
     try {
-      const response = await fetch('http://localhost:3001/auth/login', {
+      const response = await fetch('http://localhost:3001/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,8 +42,7 @@ const Login = () => {
       const data = await response.json()
 
       if (response.ok) {
-        localStorage.setItem('token', data.token)
-        login(data.user, data.token)
+        loginWithToken(data.user, data.token)
       } else if (response.status === 403 && data.needsVerification) {
         // Email not verified
         setUnverifiedUser({
@@ -64,8 +63,7 @@ const Login = () => {
 
   const handleVerificationSuccess = async (verificationData) => {
     try {
-      localStorage.setItem('token', verificationData.token)
-      login(verificationData.user, verificationData.token)
+      loginWithToken(verificationData.user, verificationData.token)
     } catch (error) {
       console.error('Login after verification error:', error)
       setError('Verification successful! Please login manually.')

@@ -22,7 +22,7 @@ const OTPVerification = ({ email, userId, onVerificationSuccess, onResendOTP }) 
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3001/auth/verify-otp', {
+      const response = await fetch('http://localhost:3001/api/auth/verify-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -55,7 +55,7 @@ const OTPVerification = ({ email, userId, onVerificationSuccess, onResendOTP }) 
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3001/auth/resend-otp', {
+      const response = await fetch('http://localhost:3001/api/auth/resend-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
