@@ -14,10 +14,7 @@ import {
   HiFire,
   HiStar,
   HiTrophy,
-  HiBadgeCheck,
-  HiRefresh,
-  HiTarget,
-  HiLightningBolt
+  HiBadgeCheck
 } from 'react-icons/hi'
 import axios from 'axios'
 import toast from 'react-hot-toast'
