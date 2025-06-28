@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import Avatar from '../components/Avatar'
-import ActivityHeatmap from '../components/ActivityHeatmap'
 import { 
   HiUser, 
   HiClock, 
@@ -142,16 +141,6 @@ const Profile = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Stats Overview */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Activity Heatmap */}
-          <div className={`rounded-lg shadow-md p-6 transition-colors ${
-            isDark ? 'bg-gray-800' : 'bg-white'
-          }`}>
-            <ActivityHeatmap 
-              studySessions={profileUser.recentSessions || []} 
-              className="w-full"
-            />
-          </div>
-
           {/* Study Statistics */}
           <div className={`rounded-lg shadow-md p-6 transition-colors ${
             isDark ? 'bg-gray-800' : 'bg-white'
